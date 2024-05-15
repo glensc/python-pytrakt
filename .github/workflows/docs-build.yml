@@ -1,0 +1,39 @@
+name: "Pull Request Docs Check"
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/docs-build.yml"
+      - "docs/**"
+  push:
+    paths:
+      - ".github/workflows/docs-build.yml"
+      - "docs/**"
+    branches:
+      - main
+
+jobs:
+  docs:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+
+      - name: Install dependencies and build docs
+        run: |
+          # Setup version
+          version=$(git describe --tags --abbrev=0)
+          echo "__version__ = '$version'" > trakt/__version__.py
+          cat trakt/__version__.py
+          python -c "from trakt import __version__; print(__version__)"
+
+          # Install deps and build docs
+          pip install -r requirements.txt
+          sudo apt install sphinx
+          make docs
+
+# vim:ts=2:sw=2:et
