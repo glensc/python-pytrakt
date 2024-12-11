@@ -72,6 +72,9 @@ AUTH_METHOD = PIN_AUTH
 #: The ID of the application to register with, when using PIN authentication
 APPLICATION_ID = None
 
+#: Timeout in seconds for all requests
+TIMEOUT = 30
+
 #: Global session to make requests with
 session = requests.Session()
 
@@ -141,7 +144,7 @@ def pin_auth(pin=None, client_id=None, client_secret=None, store=False):
             'client_id': CLIENT_ID,
             'client_secret': CLIENT_SECRET}
 
-    response = session.post(''.join([BASE_URL, '/oauth/token']), data=args)
+    response = session.post(''.join([BASE_URL, '/oauth/token']), data=args, timeout=TIMEOUT)
     OAUTH_TOKEN = response.json().get('access_token', None)
 
     if store:
@@ -231,12 +234,12 @@ def get_device_code(client_id=None, client_secret=None):
     data = {"client_id": CLIENT_ID}
 
     device_response = session.post(device_code_url,
-                                   json=data, headers=headers).json()
+                                   json=data, headers=headers, timeout=TIMEOUT).json()
     print('Your user code is: {user_code}, please navigate to '
           '{verification_url} to authenticate'.format(
-            user_code=device_response.get('user_code'),
-            verification_url=device_response.get('verification_url')
-          ))
+        user_code=device_response.get('user_code'),
+        verification_url=device_response.get('verification_url')
+    ))
 
     device_response['requested'] = time.time()
     return device_response
@@ -272,7 +275,7 @@ def get_device_token(device_code, client_id=None, client_secret=None,
     }
 
     response = session.post(
-        urljoin(BASE_URL, '/oauth/device/token'), json=data
+        urljoin(BASE_URL, '/oauth/device/token'), json=data, timeout=TIMEOUT
     )
 
     # We only get json on success.
@@ -409,13 +412,13 @@ def _refresh_token(s):
     s.logger.info("OAuth token has expired, refreshing now...")
     url = urljoin(BASE_URL, '/oauth/token')
     data = {
-                'client_id': CLIENT_ID,
-                'client_secret': CLIENT_SECRET,
-                'refresh_token': OAUTH_REFRESH,
-                'redirect_uri': REDIRECT_URI,
-                'grant_type': 'refresh_token'
-            }
-    response = session.post(url, json=data, headers=HEADERS)
+        'client_id': CLIENT_ID,
+        'client_secret': CLIENT_SECRET,
+        'refresh_token': OAUTH_REFRESH,
+        'redirect_uri': REDIRECT_URI,
+        'grant_type': 'refresh_token'
+    }
+    response = session.post(url, json=data, headers=HEADERS, timeout=TIMEOUT)
     s.logger.debug('RESPONSE [post] (%s): %s - %s', url, str(response), response.content)
     if response.status_code == 200:
         data = response.json()
@@ -542,10 +545,10 @@ class Core:
         self.logger.debug('method, url :: %s, %s', method, url)
         if method == 'get':  # GETs need to pass data as params, not body
             response = session.request(method, url, headers=HEADERS,
-                                       params=data)
+                                       params=data, timeout=TIMEOUT)
         else:
             response = session.request(method, url, headers=HEADERS,
-                                       data=json.dumps(data))
+                                       data=json.dumps(data), timeout=TIMEOUT)
         self.logger.debug('RESPONSE [%s] (%s): %s', method, url, str(response))
         if response.status_code in self.error_map:
             raise self.error_map[response.status_code](response)
@@ -568,6 +571,7 @@ class Core:
             results
         :return: The results of the generator co-routine
         """
+
         @wraps(f)
         def inner(*args, **kwargs):
             self._bootstrap()
@@ -581,6 +585,7 @@ class Core:
                 return generator.send(json_data)
             except StopIteration:
                 return None
+
         return inner
 
     def delete(self, f):
@@ -588,6 +593,7 @@ class Core:
 
         :param f: Function that returns a uri to delete to
         """
+
         @wraps(f)
         def inner(*args, **kwargs):
             self._bootstrap()
@@ -595,6 +601,7 @@ class Core:
             uri = next(generator)
             url = BASE_URL + uri
             self._handle_request('delete', url)
+
         return inner
 
     def post(self, f):
@@ -607,6 +614,7 @@ class Core:
             results
         :return: The results of the generator co-routine
         """
+
         @wraps(f)
         def inner(*args, **kwargs):
             self._bootstrap()
@@ -616,6 +624,7 @@ class Core:
                 return generator.send(json_data)
             except StopIteration:
                 return None
+
         return inner
 
     def put(self, f):
@@ -628,6 +637,7 @@ class Core:
             results
         :return: The results of the generator co-routine
         """
+
         @wraps(f)
         def inner(*args, **kwargs):
             self._bootstrap()
@@ -637,6 +647,7 @@ class Core:
                 return generator.send(json_data)
             except StopIteration:
                 return None
+
         return inner
 
 
