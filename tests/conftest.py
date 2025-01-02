@@ -26,35 +26,27 @@ MOCK_DATA_FILES = [
 ]
 
 
-class MockCore(trakt.core.Core):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class MockCore:
+    def __init__(self):
         self.mock_data = {}
         for mock_file in MOCK_DATA_FILES:
             with open(mock_file, encoding='utf-8') as f:
                 self.mock_data.update(json.load(f))
 
-    def _handle_request(self, method, url, data=None):
-        uri = url[len(trakt.core.BASE_URL):]
+    def request(self, method, uri, data=None):
         if uri.startswith('/'):
             uri = uri[1:]
         # use a deepcopy of the mocked data to ensure clean responses on every
         # request. this prevents rewrites to JSON responses from persisting
-        method_responses = deepcopy(self.mock_data).get(uri, {})
-        result = method_responses.get(method.upper())
-        if result is None:
-            print(f"Missing mock for {method.upper()} {trakt.core.BASE_URL}{uri}")
+        method_responses = self.mock_data.get(uri, {})
+        response = method_responses.get(method.upper())
+        if response is None:
+            print(f"No mock for {uri}")
+        return deepcopy(response)
 
-        return result
 
-
-"""Override utility functions from trakt.core to use an underlying MockCore
-instance
-"""
-trakt.core.CORE = MockCore()
-trakt.core.get = trakt.core.CORE.get
-trakt.core.post = trakt.core.CORE.post
-trakt.core.delete = trakt.core.CORE.delete
-trakt.core.put = trakt.core.CORE.put
 trakt.core.CLIENT_ID = 'FOO'
 trakt.core.CLIENT_SECRET = 'BAR'
+
+# Override request function with MockCore instance
+trakt.core.api().request = MockCore().request
