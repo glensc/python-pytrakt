@@ -173,7 +173,7 @@ class TokenAuth(AuthBase):
     REDIRECT_URI: str = 'urn:ietf:wg:oauth:2.0:oob'
 
     #: How many times to attempt token auth refresh before failing
-    MAX_RETRIES = 3
+    MAX_RETRIES = 1
 
     def __init__(self, client: HttpClient, config: AuthConfig):
         super().__init__()
