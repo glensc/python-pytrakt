@@ -723,10 +723,11 @@ class TVSeason(IdsMixin):
 class TVEpisode(IdsMixin):
     """Container for TV Episodes"""
 
-    def __init__(self, show, season, number=-1, **kwargs):
+    def __init__(self, show, season, number=-1, show_id=None, **kwargs):
         super().__init__()
         self.media_type = 'episodes'
         self.show = show
+        self.show_id = show_id
         self.season = season
         self.number = number
         self.overview = self.title = self.year = self.number_abs = None
