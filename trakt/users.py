@@ -310,7 +310,6 @@ class UserList(DataClassMixin(ListDescription), IdsMixin):
         movies = [m.ids for m in items if isinstance(m, Movie)]
         shows = [s.ids for s in items if isinstance(s, TVShow)]
         people = [p.ids for p in items if isinstance(p, Person)]
-        self._items = items
         args = {'movies': movies, 'shows': shows, 'people': people}
         uri = 'users/{user}/lists/{id}/items/remove'.format(
             user=slugify(self.creator), id=self.trakt)
