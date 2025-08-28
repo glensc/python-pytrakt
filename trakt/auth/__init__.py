@@ -25,6 +25,10 @@ def device_auth(config):
 
     return DeviceAuthAdapter(client=api(), config=config).authenticate()
 
+# Expose NEEDS_APPLICATION_ID on wrapper functions so init_auth can detect it
+pin_auth.NEEDS_APPLICATION_ID = True
+oauth_auth.NEEDS_APPLICATION_ID = False
+device_auth.NEEDS_APPLICATION_ID = False
 
 def get_client_info(app_id: bool, config: AuthConfig):
     """Helper function to poll the user for Client ID and Client Secret
