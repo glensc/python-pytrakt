@@ -528,6 +528,54 @@ def get_collection(list_type=None, extended=None):
             results.append(TVShow(**d.pop('show')))
 
     yield results
+           
+@get
+def get_history(list_type=None, id=None, start_at=None, end_at=None):
+    """Returns movies and episodes that a user has watched, sorted by most recent.
+
+    :param list_type: Optional Filter by a specific type.
+        Possible values: movies or episodes.
+    :param id: Optional Trakt ID for a specific item.
+    :param start_at : Optional, A `datetime.datetime` object or `str`, Filter by watched date starting at.
+    :param end_at : Optional, A `datetime.datetime` object or `str`, Filter by watched date ending at.
+    """
+    valid_type = ('movies', 'episodes')
+
+    if list_type and list_type not in valid_type:
+        raise ValueError('list_type must be one of {}'.format(valid_type))
+
+    uri = 'sync/history'
+    if list_type:
+        uri += '/{}'.format(list_type)
+
+    if id:
+        uri += '/{}'.format(id)
+
+    if not isinstance(start_at, str):
+        start_at = timestamp(start_at)
+    if start_at:
+        uri += '?start_at={start_at}'.format(start_at=start_at)
+               
+    if not isinstance(end_at, str):
+        end_at = timestamp(end_at)
+    if end_at:
+        uri += '?end_at={end_at}'.format(end_at=end_at)
+
+           
+    data = yield uri
+    results = []
+    for d in data:
+        if 'movie' in d:
+            from trakt.movies import Movie
+
+            results.append(Movie(**d.pop('movie')))
+        elif 'show' in d:
+            from trakt.tv import TVShow
+
+            results.append(TVShow(**d.pop('show')))
+
+    yield results
+
 
 
 @post
