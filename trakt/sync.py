@@ -569,10 +569,10 @@ def get_history(list_type=None, id=None, start_at=None, end_at=None):
             from trakt.movies import Movie
 
             results.append(Movie(**d.pop('movie')))
-        elif 'show' in d:
-            from trakt.tv import TVShow
+        elif 'episode' in d:
+            from trakt.tv import TVEpisode
 
-            results.append(TVShow(**d.pop('show')))
+            results.append(TVEpisode(**d.pop('episode')))
 
     yield results
 
