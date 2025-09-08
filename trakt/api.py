@@ -180,6 +180,7 @@ class TokenAuth(AuthBase):
         # OAuth token validity checked
         self.OAUTH_TOKEN_VALID = None
         self.refresh_attempts = 0
+        self.TOKEN_UNDER_REFRESH = False
 
     def __call__(self, r):
         # Skip oauth requests
@@ -204,7 +205,8 @@ class TokenAuth(AuthBase):
 
         self.config.load()
         # Check token validity and refresh token if needed
-        if not self.OAUTH_TOKEN_VALID and self.config.have_refresh_token():
+        if not self.TOKEN_UNDER_REFRESH and self.config.have_refresh_token():
+            self.TOKEN_UNDER_REFRESH = True
             self.validate_token()
 
         return [
@@ -228,6 +230,8 @@ class TokenAuth(AuthBase):
         else:
             self.logger.debug("Token expires in %s, refreshing (margin: %s)", margin, self.TOKEN_REFRESH_MARGIN)
             self.refresh_token()
+
+        self.TOKEN_UNDER_REFRESH = False
 
     def refresh_token(self):
         """Request Trakt API for a new valid OAuth token using refresh_token"""
