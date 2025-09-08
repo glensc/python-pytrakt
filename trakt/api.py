@@ -10,7 +10,8 @@ from requests.auth import AuthBase
 from trakt import errors
 from trakt.config import AuthConfig
 from trakt.core import TIMEOUT
-from trakt.errors import BadRequestException, BadResponseException, OAuthException
+from trakt.errors import (BadRequestException, BadResponseException,
+                          OAuthException)
 
 __author__ = 'Elan Ruusamäe'
 
