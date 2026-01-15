@@ -3,7 +3,7 @@
 __author__ = 'Elan Ruusamäe'
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from os.path import exists
 from typing import Optional
 
@@ -40,7 +40,8 @@ class AuthConfig:
 
     def all(self):
         result = {}
-        for key in self.__annotations__.keys():
+        for field in fields(self):
+            key = field.name
             result[key] = self.get(key)
 
         return result
@@ -55,7 +56,8 @@ class AuthConfig:
         with open(self.config_path) as config_file:
             config_data = json.load(config_file)
 
-        for key in self.__annotations__.keys():
+        for field in fields(self):
+            key = field.name
             # Don't overwrite
             if self.get(key) is not None:
                 continue
