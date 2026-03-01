@@ -10,7 +10,8 @@ from requests.auth import AuthBase
 from trakt import errors
 from trakt.config import AuthConfig
 from trakt.core import TIMEOUT
-from trakt.errors import BadRequestException, BadResponseException, OAuthException
+from trakt.errors import (BadRequestException, BadResponseException,
+                          OAuthException)
 
 __author__ = 'Elan Ruusamäe'
 
@@ -256,8 +257,9 @@ class TokenAuth(AuthBase):
         except (OAuthException, BadRequestException) as e:
             if e.response is not None:
                 try:
-                    error = e.response.json().get("error")
-                    error_description = e.response.json().get("error_description")
+                    data = e.response.json()
+                    error = data.get("error")
+                    error_description = data.get("error_description")
                 except JSONDecodeError:
                     error = "Invalid JSON response"
                     error_description = e.response.text
