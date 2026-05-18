@@ -171,7 +171,7 @@
             }
         ]
     },
-    "sync/watched/shows": {
+    "sync/watched/shows?extended=progress": {
         "GET": [
             {
                 "plays":56,
@@ -193,7 +193,7 @@
             }
         ]
     },
-    "sync/watched/shows?extended=noseasons": {
+    "sync/watched/shows": {
         "GET": [
             {
                 "plays":56,

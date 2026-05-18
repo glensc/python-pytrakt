@@ -4,7 +4,20 @@ import unicodedata
 from datetime import datetime, timezone
 
 __author__ = 'Jon Nappi'
-__all__ = ['slugify', 'airs_date', 'now', 'timestamp', 'extract_ids']
+__all__ = ['slugify', 'airs_date', 'now', 'timestamp', 'extract_ids',
+           'validate_limit']
+
+_MAX_LIMIT = 250
+
+
+def validate_limit(limit):
+    """Raise :class:`ValueError` if *limit* exceeds the maximum allowed value
+    of 250 items per page imposed by the Trakt.tv API.
+    """
+    if limit is not None and limit > _MAX_LIMIT:
+        raise ValueError(
+            f"limit must not exceed {_MAX_LIMIT} items per page, got {limit}"
+        )
 
 
 def slugify(value):

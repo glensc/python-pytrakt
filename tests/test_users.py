@@ -36,6 +36,13 @@ def test_user_collections():
         assert all([isinstance(m, Movie) for m in sean.movie_collection])
         assert all([isinstance(s, TVShow) for s in sean.show_collection])
 
+    movie_page = sean.collection('movies', page=1, limit=250)
+    show_page = sean.collection('shows', page=1, limit=250)
+    assert all(['movie' in item for item in movie_page])
+    assert all(['show' in item for item in show_page])
+    assert sean.collection('movies', page=2, limit=250) == []
+    assert sean.collection('shows', page=2, limit=250) == []
+
 
 def test_user_list():
     sean = User('sean')
@@ -107,6 +114,13 @@ def test_user_watchlists():
         assert all([isinstance(m, Movie) for m in sean.watchlist_movies])
         assert all([isinstance(s, TVShow) for s in sean.watchlist_shows])
 
+    movie_page = sean.watchlist('movies', page=1, limit=250)
+    show_page = sean.watchlist('shows', page=1, limit=250)
+    assert all([item['type'] == 'movie' for item in movie_page])
+    assert all([item['type'] == 'show' for item in show_page])
+    assert sean.watchlist('movies', page=2, limit=250) == []
+    assert sean.watchlist('shows', page=2, limit=250) == []
+
 
 def test_watching():
     sean = User('sean')
@@ -123,6 +137,13 @@ def test_watched():
     for _ in range(2):
         assert all([isinstance(m, Movie) for m in sean.watched_movies])
         assert all([isinstance(s, TVShow) for s in sean.watched_shows])
+
+    movie_page = sean.watched('movies', page=1, limit=250)
+    show_page = sean.watched('shows', page=1, limit=250)
+    assert all(['movie' in item for item in movie_page])
+    assert all(['show' in item for item in show_page])
+    assert sean.watched('movies', page=2, limit=250) == []
+    assert sean.watched('shows', page=2, limit=250) == []
 
 
 def test_stats():

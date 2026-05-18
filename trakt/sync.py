@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
 
-from deprecated import deprecated
 
 from trakt.core import delete, get, post
 from trakt.mixins import IdsMixin
@@ -19,6 +18,22 @@ __all__ = ['Scrobbler', 'comment', 'rate', 'add_to_history', 'get_collection',
            'remove_from_watchlist', 'add_to_collection',
            'remove_from_collection', 'search', 'search_by_id', 'checkin_media',
            'delete_checkin']
+
+
+WATCHLIST_TYPES = ("all", "movies", "shows", "seasons", "episodes")
+WATCHLIST_SORT_BY = (
+    "rank",
+    "added",
+    "title",
+    "released",
+    "runtime",
+    "popularity",
+    "random",
+    "percentage",
+    "my_rating",
+    "watched",
+    "collected",
+)
 
 
 @dataclass(frozen=True)
@@ -401,7 +416,7 @@ def get_playback(list_type=None):
 
 
 @get
-def get_watchlist(list_type=None, sort=None):
+def get_watchlist(list_type=None, page=1, limit=100, sort_by=None, sort_how=None):
     """
     Returns all items in a user's watchlist filtered by type.
     optionally with a filter for a specific item type.
@@ -411,27 +426,33 @@ def get_watchlist(list_type=None, sort=None):
 
     :param list_type: Optional Filter by a specific type.
         Possible values: movies, shows, seasons or episodes.
-    :param sort: Optional sort. Only if the type is also sent.
-        Possible values: rank, added, released or title.
-
+    :param page: Optional page number for pagination.
+    :param limit: Optional number of items per page.
+    :param sort_by: Optional sort. Only if the type is also sent.
+        Possible values: rank, added, title, released, runtime, popularity,
+        random, percentage, my_rating, watched, collected.
+    :param sort_how: Optional sort direction, 'asc' or 'desc'.
     https://trakt.docs.apiary.io/#reference/sync/get-watchlist/get-watchlist
     """
-    valid_type = ('movies', 'shows', 'seasons', 'episodes')
-    valid_sort = ('rank', 'added', 'released', 'title')
-
-    if list_type and list_type not in valid_type:
-        raise ValueError('list_type must be one of {}'.format(valid_type))
-
-    if sort and sort not in valid_sort:
-        raise ValueError('sort must be one of {}'.format(valid_sort))
 
     uri = 'sync/watchlist'
-    if list_type:
+    if list_type is not None:
+        if list_type not in WATCHLIST_TYPES:
+            raise ValueError('list_type must be one of {}'.format(WATCHLIST_TYPES))
         uri += '/{}'.format(list_type)
 
-    if list_type and sort:
-        uri += '/{}'.format(sort)
+    if sort_by is not None:
+        if sort_by not in WATCHLIST_SORT_BY:
+            raise ValueError('sort_by must be one of {}'.format(WATCHLIST_SORT_BY))
+        uri += '/{}'.format(sort_by)
 
+        if sort_how is not None:
+            if sort_how not in ("asc", "desc"):
+                raise ValueError("Invalid sort_how value. Must be 'asc' or 'desc'")
+            uri += '?sort_how={}'.format(sort_how)
+
+    params: dict[str, int | str] = {"page": page, "limit": limit}
+    uri += "?" + "&".join(f"{k}={v}" for k, v in params.items())
     data = yield uri
     results = []
     for d in data:
@@ -454,14 +475,14 @@ def get_watchlist(list_type=None, sort=None):
     yield results
 
 
-@deprecated("This method returns watchlist, not watched list. "
-            "This will be fixed in PyTrakt 4.x to return watched list")
 @get
-def get_watched(list_type=None, extended=None):
+def get_watched(list_type=None, page=1, limit=100, extended=None):
     """Return all movies or shows a user has watched sorted by most plays.
 
     :param list_type: Optional Filter by a specific type.
         Possible values: movies, shows, seasons or episodes.
+    :param page: Optional page number for pagination.
+    :param limit: Optional number of items per page.
     :param extended: Optional value for requesting extended information.
     """
     valid_type = ('movies', 'shows', 'seasons', 'episodes')
@@ -473,8 +494,10 @@ def get_watched(list_type=None, extended=None):
     if list_type:
         uri += '/{}'.format(list_type)
 
+    params: dict[str, int | str] = {"page": page, "limit": limit}
     if list_type == 'shows' and extended:
-        uri += '?extended={extended}'.format(extended=extended)
+        params['extended'] = extended
+    uri += "?" + "&".join(f"{k}={v}" for k, v in params.items())
 
     data = yield uri
     results = []
@@ -492,7 +515,7 @@ def get_watched(list_type=None, extended=None):
 
 
 @get
-def get_collection(list_type=None, extended=None):
+def get_collection(list_type=None, page=1, limit=100, extended=None):
     """
     Get all collected items in a user's collection.
 
@@ -501,6 +524,8 @@ def get_collection(list_type=None, extended=None):
 
     :param list_type: Optional Filter by a specific type.
         Possible values: movies or shows.
+    :param page: Optional page number for pagination.
+    :param limit: Optional number of items per page.
     :param extended: Optional value for requesting extended information.
     """
     valid_type = ('movies', 'shows')
@@ -512,8 +537,12 @@ def get_collection(list_type=None, extended=None):
     if list_type:
         uri += '/{}'.format(list_type)
 
+    params: dict[str, int | str] = {"page": page, "limit": limit}
+
     if extended:
-        uri += '?extended={extended}'.format(extended=extended)
+        params['extended'] = extended
+
+    uri += "?" + "&".join(f"{k}={v}" for k, v in params.items())
 
     data = yield uri
     results = []

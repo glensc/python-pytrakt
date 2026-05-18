@@ -31,7 +31,7 @@
       }
     }
   },
-  "lists/1248149/items": {
+  "lists/1248149/items?page=1&limit=100": {
     "GET": [
       {
         "rank": 1,
