@@ -11,7 +11,7 @@ from trakt import errors
 from trakt.config import AuthConfig
 from trakt.core import TIMEOUT
 from trakt.errors import (BadRequestException, BadResponseException,
-                          OAuthException)
+                          OAuthException, OAuthRefreshException)
 
 __author__ = 'Elan Ruusamäe'
 
@@ -223,24 +223,28 @@ class TokenAuth(AuthBase):
         critical operations while also maximizing the token's useful lifetime.
         """
 
-        current = datetime.now(tz=timezone.utc)
-        expires_at = datetime.fromtimestamp(self.config.OAUTH_EXPIRES_AT, tz=timezone.utc)
-        margin = expires_at - current
-        if margin > timedelta(**self.TOKEN_REFRESH_MARGIN):
-            self.OAUTH_TOKEN_VALID = True
-        else:
-            self.logger.debug("Token expires in %s, refreshing (margin: %s)", margin, self.TOKEN_REFRESH_MARGIN)
-            self.refresh_token()
+        try:
+            expires_at_timestamp = self.config.OAUTH_EXPIRES_AT
+            if expires_at_timestamp is None:
+                self.OAUTH_TOKEN_VALID = False
+                raise OAuthRefreshException(
+                    error='missing_token_expiry',
+                    error_description='OAuth token expiry is missing from the current configuration.',
+                )
 
-        self.TOKEN_UNDER_REFRESH = False
+            current = datetime.now(tz=timezone.utc)
+            expires_at = datetime.fromtimestamp(expires_at_timestamp, tz=timezone.utc)
+            margin = expires_at - current
+            if margin > timedelta(**self.TOKEN_REFRESH_MARGIN):
+                self.OAUTH_TOKEN_VALID = True
+            else:
+                self.logger.debug("Token expires in %s, refreshing (margin: %s)", margin, self.TOKEN_REFRESH_MARGIN)
+                self.refresh_token()
+        finally:
+            self.TOKEN_UNDER_REFRESH = False
 
     def refresh_token(self):
         """Request Trakt API for a new valid OAuth token using refresh_token"""
-
-        if self.refresh_attempts >= self.MAX_RETRIES:
-            self.logger.error("Max token refresh attempts reached. Manual intervention required.")
-            return
-        self.refresh_attempts += 1
 
         self.logger.info("OAuth token has expired, refreshing now...")
         data = {
@@ -251,26 +255,38 @@ class TokenAuth(AuthBase):
             'grant_type': 'refresh_token'
         }
 
-        try:
-            response = self.client.post('oauth/token', data)
+        last_error = None
+        response = None
+        for attempt in range(1, self.MAX_RETRIES + 1):
+            self.refresh_attempts = attempt
+            try:
+                response = self.client.post('oauth/token', data)
+                self.refresh_attempts = 0
+                break
+            except (OAuthException, BadRequestException) as exc:
+                last_error = self._build_refresh_exception(exc)
+                self.logger.error(
+                    "%s - Unable to refresh expired OAuth token (%s) %s",
+                    exc.http_code,
+                    last_error.error or 'unknown_error',
+                    last_error.error_description or ''
+                )
+        else:
+            self.OAUTH_TOKEN_VALID = False
             self.refresh_attempts = 0
-        except (OAuthException, BadRequestException) as e:
-            if e.response is not None:
-                try:
-                    data = e.response.json()
-                    error = data.get("error")
-                    error_description = data.get("error_description")
-                except JSONDecodeError:
-                    error = "Invalid JSON response"
-                    error_description = e.response.text
-            else:
-                error = "No error description"
-                error_description = ""
-            self.logger.error(
-                "%s - Unable to refresh expired OAuth token (%s) %s",
-                e.http_code, error, error_description
+            if last_error is None:
+                raise OAuthRefreshException(
+                    error='unknown_refresh_error',
+                    error_description='OAuth token refresh failed without an explicit API error.',
+                )
+            raise last_error
+
+        if response is None:
+            self.OAUTH_TOKEN_VALID = False
+            raise OAuthRefreshException(
+                error='empty_refresh_response',
+                error_description='OAuth token refresh completed without a response payload.',
             )
-            return
 
         self.config.update(
             OAUTH_TOKEN=response.get("access_token"),
@@ -279,9 +295,38 @@ class TokenAuth(AuthBase):
         )
         self.OAUTH_TOKEN_VALID = True
 
+        expires_at_timestamp = self.config.OAUTH_EXPIRES_AT
+        if expires_at_timestamp is None:
+            self.OAUTH_TOKEN_VALID = False
+            raise OAuthRefreshException(
+                error='invalid_refresh_state',
+                error_description='OAuth token refresh did not persist an expiry timestamp.',
+            )
+
         self.logger.info(
             "OAuth token successfully refreshed, valid until {}".format(
-                datetime.fromtimestamp(self.config.OAUTH_EXPIRES_AT, tz=timezone.utc)
+                datetime.fromtimestamp(expires_at_timestamp, tz=timezone.utc)
             )
         )
         self.config.store()
+
+    @staticmethod
+    def _build_refresh_exception(exc):
+        error = 'No error description'
+        error_description = ''
+
+        if exc.response is not None:
+            try:
+                data = exc.response.json()
+                error = data.get("error") or error
+                error_description = data.get("error_description") or error_description
+            except JSONDecodeError:
+                error = 'Invalid JSON response'
+                error_description = exc.response.text
+
+        return OAuthRefreshException(
+            response=exc.response,
+            error=error,
+            error_description=error_description,
+            cause=exc,
+        )
