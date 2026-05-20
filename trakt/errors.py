@@ -69,19 +69,40 @@ class OAuthException(TraktException):
 
 
 class OAuthRefreshException(OAuthException):
+    """Raised when an OAuth access token could not be refreshed."""
+
     message = 'Unauthorized - OAuth token refresh failed'
 
-    def __init__(self, response=None):
+    def __init__(self, response=None, error=None, error_description=None, cause=None):
         super().__init__(response)
-        self.data = self.response.json()
+        self.cause = cause
+        self.data = self._load_data()
+        self._error = error or self.data.get("error")
+        self._error_description = error_description or self.data.get("error_description")
+
+    def _load_data(self):
+        if self.response is None:
+            return {}
+
+        try:
+            return self.response.json()
+        except (AttributeError, ValueError):
+            return {}
 
     @property
     def error(self):
-        return self.data["error"]
+        return self._error
 
     @property
     def error_description(self):
-        return self.data["error_description"]
+        return self._error_description
+
+    def __str__(self):
+        if self.error and self.error_description:
+            return f'{self.message}: {self.error} - {self.error_description}'
+        if self.error:
+            return f'{self.message}: {self.error}'
+        return self.message
 
 
 class ForbiddenException(TraktException):
