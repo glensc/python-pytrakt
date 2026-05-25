@@ -16,7 +16,8 @@ __all__ = ['Airs', 'Alias', 'Comment', 'Genre', 'get', 'delete', 'post', 'put',
            'OAUTH_REFRESH', 'PIN_AUTH', 'OAUTH_AUTH', 'AUTH_METHOD',
            'config', 'api',
            'TIMEOUT',
-           'APPLICATION_ID']
+           'APPLICATION_ID',
+           'get_pagination']
 
 #: The base url for the Trakt API. Can be modified to run against different
 #: Trakt.tv environments
@@ -157,3 +158,13 @@ def put(f):
     from trakt.decorators import put
 
     return put(f)
+
+
+def get_pagination():
+    """Return pagination info from the most recent paginated API response.
+
+    See :func:`trakt.utils.get_pagination` for full documentation.
+    """
+    from trakt.utils import get_pagination as _get_pagination
+
+    return _get_pagination()

@@ -2,12 +2,59 @@
 import re
 import unicodedata
 from datetime import datetime, timezone
+from typing import Iterator, Callable, Optional, NamedTuple
+
+import trakt._pagination as _pagination_store
 
 __author__ = 'Jon Nappi'
 __all__ = ['slugify', 'airs_date', 'now', 'timestamp', 'extract_ids',
-           'validate_limit']
+           'validate_limit', 'Pagination', 'get_pagination', 'iter_pages']
 
 _MAX_LIMIT = 250
+
+
+class Pagination(NamedTuple):
+    """Pagination metadata from a Trakt.tv API response."""
+    item_count: int
+    limit: int
+    page: int
+    page_count: int
+
+
+def get_pagination() -> Optional[Pagination]:
+    """Return the pagination info from the most recent paginated API response.
+
+    Returns a :class:`Pagination` namedtuple with *item_count*, *limit*,
+    *page*, and *page_count* fields, or ``None`` when the last response did
+    not include ``x-pagination-*`` headers (e.g. non-paginated endpoints).
+    """
+    return _pagination_store.get()
+
+
+def iter_pages(fn: Callable, *args, **kwargs) -> Iterator:
+    """Iterate over every page returned by a paginated endpoint.
+
+    Calls *fn* with ``page=1, 2, …`` until either the response contains an
+    ``x-pagination-page-count`` header and the last page has been fetched, or
+    the response is empty (fallback when no pagination headers are present).
+
+    :param fn: A callable that accepts a *page* keyword argument and returns
+        the page's data.
+    :param args: Positional arguments forwarded to *fn*.
+    :param kwargs: Keyword arguments forwarded to *fn* (``page`` is
+        overridden on each call).
+    """
+    page = 1
+    while True:
+        kwargs['page'] = page
+        data = fn(*args, **kwargs)
+        if not data:
+            break
+        yield data
+        pagination = get_pagination()
+        if pagination is not None and page >= pagination.page_count:
+            break
+        page += 1
 
 
 def validate_limit(limit):

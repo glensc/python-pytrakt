@@ -11,7 +11,7 @@
     "sync/playback/13": {
         "DELETE": ""
     },
-    "sync/collection/movies": {
+    "sync/collection/movies?page=1&limit=100": {
         "GET": [
             {
                 "collected_at":"2014-09-01T09:10:11.000Z",
@@ -23,7 +23,7 @@
             }
         ]
     },
-    "sync/collection/movies?extended=metadata": {
+    "sync/collection/movies?page=1&limit=100&extended=metadata": {
         "GET": [
             {
                 "collected_at":"2014-09-01T09:10:11.000Z",
@@ -37,7 +37,7 @@
             }
         ]
     },
-    "sync/collection/shows": {
+    "sync/collection/shows?page=1&limit=100": {
         "GET": [
             {
                 "last_collected_at":"2014-09-01T09:10:11.000Z",
@@ -81,7 +81,7 @@
             }
         ]
     },
-    "sync/collection/shows?extended=metadata": {
+    "sync/collection/shows?page=1&limit=100&extended=metadata": {
         "GET": [
             {
                 "last_collected_at":"2014-09-01T09:10:11.000Z",
@@ -149,7 +149,21 @@
             }
         }
     },
-    "sync/watched/movies": {
+    "sync/watched/movies?page=1&limit=100": {
+        "GET": [
+            {
+                "plays":56,
+                "last_watched_at":"2014-10-11T17:00:54.000Z",
+                "movie":{"title":"TRON: Legacy","year":2010,"ids":{"trakt":1,"slug":"tron-legacy-2010","imdb":"tt1104001","tmdb":20526}}
+            },
+            {
+                "plays":23,
+                "last_watched_at":"2014-10-12T17:00:54.000Z",
+                "movie":{"title":"The Dark Knight","year":2008,"ids":{"trakt":4,"slug":"the-dark-knight-2008","imdb":"tt0468569","tmdb":155}}
+            }
+        ]
+    },
+    "sync/watched/shows?page=1&limit=100&extended=progress": {
         "GET": [
             {
                 "plays":56,
@@ -171,29 +185,7 @@
             }
         ]
     },
-    "sync/watched/shows?extended=progress": {
-        "GET": [
-            {
-                "plays":56,
-                "last_watched_at":"2014-10-11T17:00:54.000Z",
-                "show":{"title":"Breaking Bad","year":2008,"ids":{"trakt":1,"slug":"breaking-bad","tvdb":81189,"imdb":"tt0903747","tmdb":1396,"tvrage":18164}},
-                "seasons":[
-                    {"number":1,"episodes":[{"number":1,"plays":1,"last_watched_at":"2014-10-11T17:00:54.000Z"},{"number":2,"plays":1,"last_watched_at":"2014-10-11T17:00:54.000Z"}]},
-                    {"number":2,"episodes":[{"number":1,"plays":1,"last_watched_at":"2014-10-11T17:00:54.000Z"},{"number":2,"plays":1,"last_watched_at":"2014-10-11T17:00:54.000Z"}]}
-                ]
-            },
-            {
-                "plays":23,
-                "last_watched_at":"2014-10-12T17:00:54.000Z",
-                "show":{"title":"Parks and Recreation","year":2009,"ids":{"trakt":4,"slug":"parks-and-recreation","tvdb":84912,"imdb":"tt1266020","tmdb":8592,"tvrage":21686}},
-                "seasons":[
-                    {"number":1,"episodes":[{"number":1,"plays":1,"last_watched_at":"2014-10-11T17:00:54.000Z"},{"number":2,"plays":1,"last_watched_at":"2014-10-11T17:00:54.000Z"}]},
-                    {"number":2,"episodes":[{"number":1,"plays":1,"last_watched_at":"2014-10-11T17:00:54.000Z"},{"number":2,"plays":1,"last_watched_at":"2014-10-11T17:00:54.000Z"}]}
-                ]
-            }
-        ]
-    },
-    "sync/watched/shows": {
+    "sync/watched/shows?page=1&limit=100": {
         "GET": [
             {
                 "plays":56,
@@ -397,7 +389,7 @@
             }
         }
     },
-    "sync/watchlist/movies": {
+    "sync/watchlist/movies?page=1&limit=100": {
         "GET": [
             {
                 "listed_at":"2014-09-01T09:10:11.000Z",
@@ -411,7 +403,10 @@
             }
         ]
     },
-    "sync/watchlist/shows": {
+    "sync/watchlist/movies?page=2&limit=100": {
+        "GET": []
+    },
+    "sync/watchlist/shows?page=1&limit=100": {
         "GET": [
             {
                 "listed_at":"2014-09-01T09:10:11.000Z",
@@ -425,7 +420,7 @@
             }
         ]
     },
-    "sync/watchlist/seasons": {
+    "sync/watchlist/seasons?page=1&limit=100": {
         "GET": [
             {
                 "listed_at":"2014-09-01T09:10:11.000Z",
@@ -441,7 +436,7 @@
             }
         ]
     },
-    "sync/watchlist/episodes": {
+    "sync/watchlist/episodes?page=1&limit=100": {
         "GET": [
             {
                 "listed_at":"2014-09-01T09:10:11.000Z",

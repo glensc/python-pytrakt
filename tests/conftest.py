@@ -4,6 +4,7 @@ import os
 from copy import deepcopy
 
 import trakt
+import trakt._pagination as _pagination_store
 
 TESTS_DIR = os.path.dirname(__file__)
 MOCK_DATA_DIR = os.path.join(TESTS_DIR, "mock_data")
@@ -42,6 +43,9 @@ class MockCore:
         response = method_responses.get(method.upper())
         if response is None:
             print(f"No mock for {uri}")
+        # Mock responses carry no HTTP headers, so clear any stale pagination
+        # state to ensure iter_pages stops after the first populated page.
+        _pagination_store.set(None)
         return deepcopy(response)
 
 

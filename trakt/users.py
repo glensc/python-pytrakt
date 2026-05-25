@@ -9,7 +9,7 @@ from trakt.mixins import DataClassMixin, IdsMixin
 from trakt.movies import Movie
 from trakt.people import Person
 from trakt.tv import TVEpisode, TVSeason, TVShow
-from trakt.utils import slugify, validate_limit
+from trakt.utils import get_pagination, iter_pages, slugify, validate_limit
 
 __author__ = "Jon Nappi"
 __all__ = [
@@ -194,13 +194,8 @@ class PublicList(DataClassMixin(ListDescription), IdsMixin):
     def items(self):
         if self._items is None:
             self._items = []
-            page = 1
-            while True:
-                data = self._load_items(page=page, limit=250)
-                if not data:
-                    break
+            for data in iter_pages(self._load_items, limit=250):
                 self._items.extend(data)
-                page += 1
         return self._items
 
     @get
@@ -281,9 +276,13 @@ class UserList(DataClassMixin(ListDescription), IdsMixin):
         ulist = cls(creator=creator, **data)
         page = 1
         while True:
-            item_count = len(ulist._items)
+            prev_count = len(ulist._items)
             ulist.get_items(page=page, limit=250)
-            if len(ulist._items) == item_count:
+            pagination = get_pagination()
+            if pagination is not None:
+                if page >= pagination.page_count:
+                    break
+            elif len(ulist._items) == prev_count:
                 break
             page += 1
 
@@ -609,7 +608,7 @@ class User:
         yield data
 
     @get
-    def collection(self, media_type="movies", page=1, limit=100, extended="metadata"):
+    def collection(self, media_type="movies", page=1, limit=100, extended=None):
         """Returns a page of collection items for :class:`User`.
 
         :param media_type: One of 'movies' or 'shows'.
@@ -663,13 +662,8 @@ class User:
         """Returns all watchlist shows of :class:`User`."""
         if self._show_watchlist is None:
             self._show_watchlist = []
-            page = 1
-            while True:
-                data = self.watchlist(media_type="shows", page=page, limit=250)
-                if not data:
-                    break
+            for data in iter_pages(self.watchlist, media_type="shows", limit=250):
                 self._show_watchlist.extend(self._parse_watchlist_shows(data))
-                page += 1
         yield self._show_watchlist
 
     @property
@@ -678,13 +672,8 @@ class User:
         """Returns all watchlist movies of :class:`User`."""
         if self._movie_watchlist is None:
             self._movie_watchlist = []
-            page = 1
-            while True:
-                data = self.watchlist(media_type="movies", page=page, limit=250)
-                if not data:
-                    break
+            for data in iter_pages(self.watchlist, media_type="movies", limit=250):
                 self._movie_watchlist.extend(self._parse_watchlist_movies(data))
-                page += 1
         yield self._movie_watchlist
 
     @property
@@ -696,13 +685,8 @@ class User:
         """
         if self._movie_collection is None:
             self._movie_collection = []
-            page = 1
-            while True:
-                data = self.collection(media_type="movies", page=page, limit=250)
-                if not data:
-                    break
+            for data in iter_pages(self.collection, media_type="movies", limit=250):
                 self._movie_collection.extend(self._parse_collection_movies(data))
-                page += 1
         yield self._movie_collection
 
     @property
@@ -714,13 +698,8 @@ class User:
         """
         if self._show_collection is None:
             self._show_collection = []
-            page = 1
-            while True:
-                data = self.collection(media_type="shows", page=page, limit=250)
-                if not data:
-                    break
+            for data in iter_pages(self.collection, media_type="shows", limit=250):
                 self._show_collection.extend(self._parse_collection_shows(data))
-                page += 1
         yield self._show_collection
 
     @property
@@ -731,13 +710,8 @@ class User:
         """
         if self._movies_watched is None:
             self._movies_watched = []
-            page = 1
-            while True:
-                data = self.watched(media_type="movies", page=page, limit=250)
-                if not data:
-                    break
+            for data in iter_pages(self.watched, media_type="movies", limit=250):
                 self._movies_watched.extend(self._parse_watched_movies(data))
-                page += 1
         yield self._movies_watched
 
     @property
@@ -748,13 +722,8 @@ class User:
         """
         if self._shows_watched is None:
             self._shows_watched = []
-            page = 1
-            while True:
-                data = self.watched(media_type="shows", page=page, limit=250)
-                if not data:
-                    break
+            for data in iter_pages(self.watched, media_type="shows", limit=250):
                 self._shows_watched.extend(self._parse_watched_shows(data))
-                page += 1
         yield self._shows_watched
 
     @property
