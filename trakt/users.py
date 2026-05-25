@@ -208,6 +208,7 @@ class PublicList(DataClassMixin(ListDescription), IdsMixin):
         data = yield f"lists/{self.trakt}/items?page={page}&limit={limit}"
         if not data:
             yield []
+            return
         yield list(self._process_items(data))
 
     @staticmethod
@@ -293,6 +294,7 @@ class UserList(DataClassMixin(ListDescription), IdsMixin):
         )
         if not data:
             yield []
+            return
 
         saved_pagination = _pagination_store.get()
         items = []
