@@ -176,11 +176,7 @@
             "tvrage": null
           }
         }
-      }
-    ]
-  },
-  "lists/1248149/items?page=2&limit=250": {
-    "GET": [
+      },
       {
         "rank": 3,
         "id": 964880087,
@@ -232,8 +228,5 @@
         }
       }
     ]
-  },
-  "lists/1248149/items?page=3&limit=250": {
-    "GET": []
   }
 }
