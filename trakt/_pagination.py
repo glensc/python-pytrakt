@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 """Internal thread-local store for pagination state.
 
-This module is intentionally *not* part of the public API.  External code
-should use :func:`trakt.utils.get_pagination` to read pagination metadata
-after an API call.
+This module is intentionally *not* part of the public API.
 """
 
 import threading

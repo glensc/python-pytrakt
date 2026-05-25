@@ -8,7 +8,7 @@ import trakt._pagination as _pagination_store
 
 __author__ = 'Jon Nappi'
 __all__ = ['slugify', 'airs_date', 'now', 'timestamp', 'extract_ids',
-           'validate_limit', 'Pagination', 'get_pagination', 'iter_pages']
+           'validate_limit', 'Pagination', 'iter_pages']
 
 _MAX_LIMIT = 250
 
@@ -21,7 +21,7 @@ class Pagination(NamedTuple):
     page_count: int
 
 
-def get_pagination() -> Optional[Pagination]:
+def _get_pagination() -> Optional[Pagination]:
     """Return the pagination info from the most recent paginated API response.
 
     Returns a :class:`Pagination` namedtuple with *item_count*, *limit*,
@@ -51,7 +51,7 @@ def iter_pages(fn: Callable, *args, **kwargs) -> Iterator:
         if not data:
             break
         yield data
-        pagination = get_pagination()
+        pagination = _get_pagination()
         if pagination is None:
             break
         if page >= pagination.page_count:
