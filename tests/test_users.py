@@ -38,6 +38,8 @@ def test_user_collections():
 
     movie_page = sean.collection('movies', page=1, limit=250)
     show_page = sean.collection('shows', page=1, limit=250)
+    assert movie_page
+    assert show_page
     assert all(['movie' in item for item in movie_page])
     assert all(['show' in item for item in show_page])
     assert sean.collection('movies', page=2, limit=250) == []
@@ -59,9 +61,12 @@ def test_user_list():
 
     # get list
     l = UserList.get(data['name'], sean.username)
+    assert len(list(l)) == 5
+
     l = sean.get_list(data['name'])
     for k, v in data.items():
         assert getattr(l, k) == v
+    assert len(list(l)) == 5
 
     # enumerate list items
     instancetypes = (Movie, TVShow, TVSeason, TVEpisode, Person)
@@ -116,6 +121,8 @@ def test_user_watchlists():
 
     movie_page = sean.watchlist('movies', page=1, limit=250)
     show_page = sean.watchlist('shows', page=1, limit=250)
+    assert movie_page
+    assert show_page
     assert all([item['type'] == 'movie' for item in movie_page])
     assert all([item['type'] == 'show' for item in show_page])
     assert sean.watchlist('movies', page=2, limit=250) == []

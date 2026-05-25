@@ -129,5 +129,111 @@
         }
       }
     ]
+  },
+  "lists/1248149/items?page=1&limit=250": {
+    "GET": [
+      {
+        "rank": 1,
+        "id": 37745122,
+        "listed_at": "2015-07-16T15:01:36.000Z",
+        "notes": null,
+        "type": "movie",
+        "movie": {
+          "title": "Captain America: The First Avenger",
+          "year": 2011,
+          "ids": {
+            "trakt": 1170,
+            "slug": "captain-america-the-first-avenger-2011",
+            "imdb": "tt0458339",
+            "tmdb": 1771
+          }
+        }
+      },
+      {
+        "rank": 2,
+        "id": 92178558,
+        "listed_at": "2016-04-24T15:44:25.000Z",
+        "notes": null,
+        "type": "season",
+        "season": {
+          "number": 1,
+          "ids": {
+            "trakt": 83598,
+            "tvdb": 585033,
+            "tmdb": 63213,
+            "tvrage": null
+          }
+        },
+        "show": {
+          "title": "Marvel's Agent Carter",
+          "year": 2015,
+          "ids": {
+            "trakt": 77677,
+            "slug": "marvel-s-agent-carter",
+            "tvdb": 281485,
+            "imdb": "tt3475734",
+            "tmdb": 61550,
+            "tvrage": null
+          }
+        }
+      }
+    ]
+  },
+  "lists/1248149/items?page=2&limit=250": {
+    "GET": [
+      {
+        "rank": 3,
+        "id": 964880087,
+        "listed_at": "2024-01-19T20:35:45.000Z",
+        "notes": null,
+        "type": "episode",
+        "episode": {
+          "season": 1,
+          "number": 1,
+          "title": "Stark Expo 1974",
+          "ids": {
+            "trakt": 3448545,
+            "tvdb": 7106488,
+            "imdb": null,
+            "tmdb": null,
+            "tvrage": null
+          }
+        },
+        "show": {
+          "title": "Stark Expo Shorts",
+          "year": 2010,
+          "ids": {
+            "trakt": 145816,
+            "slug": "stark-expo-shorts",
+            "tvdb": 361608,
+            "imdb": null,
+            "tmdb": null,
+            "tvrage": null
+          }
+        }
+      },
+      {
+        "rank": 4,
+        "id": 564744722,
+        "listed_at": "2021-01-16T12:25:07.000Z",
+        "notes": null,
+        "type": "show",
+        "show": {
+          "title": "Moon Knight",
+          "year": 2022,
+          "ids": {
+            "trakt": 151840,
+            "slug": "moon-knight",
+            "tvdb": 368611,
+            "imdb": "tt10234724",
+            "tmdb": 92749,
+            "tvrage": null
+          }
+        }
+      }
+    ]
+  },
+  "lists/1248149/items?page=3&limit=250": {
+    "GET": []
   }
 }

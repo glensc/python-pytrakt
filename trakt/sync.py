@@ -9,7 +9,7 @@ from typing import Any
 
 from trakt.core import delete, get, post
 from trakt.mixins import IdsMixin
-from trakt.utils import slugify, timestamp
+from trakt.utils import slugify, timestamp, validate_limit
 
 __author__ = 'Jon Nappi'
 __all__ = ['Scrobbler', 'comment', 'rate', 'add_to_history', 'get_collection',
@@ -435,6 +435,7 @@ def get_watchlist(list_type=None, page=1, limit=100, sort_by=None, sort_how=None
     https://trakt.docs.apiary.io/#reference/sync/get-watchlist/get-watchlist
     """
 
+    validate_limit(limit)
     uri = 'sync/watchlist'
     if list_type is not None:
         if list_type not in WATCHLIST_TYPES:
@@ -449,7 +450,7 @@ def get_watchlist(list_type=None, page=1, limit=100, sort_by=None, sort_how=None
         if sort_how is not None:
             if sort_how not in ("asc", "desc"):
                 raise ValueError("Invalid sort_how value. Must be 'asc' or 'desc'")
-            uri += '?sort_how={}'.format(sort_how)
+            uri += '/{}'.format(sort_how)
 
     params: dict[str, int | str] = {"page": page, "limit": limit}
     uri += "?" + "&".join(f"{k}={v}" for k, v in params.items())
@@ -490,6 +491,7 @@ def get_watched(list_type=None, page=1, limit=100, extended=None):
     if list_type and list_type not in valid_type:
         raise ValueError('list_type must be one of {}'.format(valid_type))
 
+    validate_limit(limit)
     uri = 'sync/watched'
     if list_type:
         uri += '/{}'.format(list_type)
@@ -533,6 +535,7 @@ def get_collection(list_type=None, page=1, limit=100, extended=None):
     if list_type and list_type not in valid_type:
         raise ValueError('list_type must be one of {}'.format(valid_type))
 
+    validate_limit(limit)
     uri = 'sync/collection'
     if list_type:
         uri += '/{}'.format(list_type)

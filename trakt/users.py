@@ -193,7 +193,14 @@ class PublicList(DataClassMixin(ListDescription), IdsMixin):
     @property
     def items(self):
         if self._items is None:
-            self._load_items()
+            self._items = []
+            page = 1
+            while True:
+                data = self._load_items(page=page, limit=250)
+                if not data:
+                    break
+                self._items.extend(data)
+                page += 1
         return self._items
 
     @get
@@ -203,8 +210,9 @@ class PublicList(DataClassMixin(ListDescription), IdsMixin):
         """
         validate_limit(limit)
         data = yield f"lists/{self.trakt}/items?page={page}&limit={limit}"
-        self._items = list(self._process_items(data))
-        yield self._items
+        if not data:
+            yield []
+        yield list(self._process_items(data))
 
     @staticmethod
     def _process_items(items):
@@ -271,7 +279,13 @@ class UserList(DataClassMixin(ListDescription), IdsMixin):
             user=slugify(creator), id=slugify(title)
         )
         ulist = cls(creator=creator, **data)
-        ulist.get_items()
+        page = 1
+        while True:
+            item_count = len(ulist._items)
+            ulist.get_items(page=page, limit=250)
+            if len(ulist._items) == item_count:
+                break
+            page += 1
 
         yield ulist
 
@@ -287,6 +301,8 @@ class UserList(DataClassMixin(ListDescription), IdsMixin):
         data = yield "users/{user}/lists/{id}/items?page={page}&limit={limit}".format(
             user=slugify(self.creator), id=self.slug, page=page, limit=limit
         )
+        if not data:
+            yield self._items
 
         for item in data:
             # match list item type
@@ -368,6 +384,8 @@ class UserList(DataClassMixin(ListDescription), IdsMixin):
         """Remove a like on this :class:`UserList`."""
         uri = "users/{username}/lists/{id}/like"
         yield uri.format(username=slugify(self.creator), id=self.trakt)
+
+    get = _get
 
 
 class User:
@@ -762,7 +780,9 @@ class User:
             ep_data = data.pop("episode")
             sh_data = data.pop("show")
             ep_data.update(
-                data, show=sh_data.get("title"), show_id=sh_data.get("trakt")
+                data,
+                show=sh_data.get("title"),
+                show_id=sh_data.get("ids", {}).get("trakt"),
             )
             yield TVEpisode(**ep_data)
 
@@ -843,5 +863,3 @@ class User:
     __repr__ = __str__
 
 
-# get decorator issue workaround - "It's a little hacky"
-UserList.get = UserList._get
