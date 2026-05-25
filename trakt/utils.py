@@ -52,7 +52,9 @@ def iter_pages(fn: Callable, *args, **kwargs) -> Iterator:
             break
         yield data
         pagination = get_pagination()
-        if pagination is not None and page >= pagination.page_count:
+        if pagination is None:
+            break
+        if page >= pagination.page_count:
             break
         page += 1
 

@@ -4,12 +4,13 @@
 from dataclasses import dataclass
 from typing import Any, NamedTuple, Optional, Union
 
+import trakt._pagination as _pagination_store
 from trakt.core import delete, get, post
 from trakt.mixins import DataClassMixin, IdsMixin
 from trakt.movies import Movie
 from trakt.people import Person
 from trakt.tv import TVEpisode, TVSeason, TVShow
-from trakt.utils import get_pagination, iter_pages, slugify, validate_limit
+from trakt.utils import iter_pages, slugify, validate_limit
 
 __author__ = "Jon Nappi"
 __all__ = [
@@ -274,18 +275,8 @@ class UserList(DataClassMixin(ListDescription), IdsMixin):
             user=slugify(creator), id=slugify(title)
         )
         ulist = cls(creator=creator, **data)
-        page = 1
-        while True:
-            page_items = ulist.get_items(page=page, limit=250)
+        for page_items in iter_pages(ulist.get_items, limit=250):
             ulist._items.extend(page_items)
-            pagination = get_pagination()
-            if pagination is not None:
-                if page >= pagination.page_count:
-                    break
-            elif not page_items:
-                break
-            page += 1
-
         yield ulist
 
     @get
@@ -303,6 +294,7 @@ class UserList(DataClassMixin(ListDescription), IdsMixin):
         if not data:
             yield []
 
+        saved_pagination = _pagination_store.get()
         items = []
         for item in data:
             # match list item type
@@ -336,6 +328,7 @@ class UserList(DataClassMixin(ListDescription), IdsMixin):
             elif item_type == "person":
                 items.append(Person(item_data["name"], item_data["ids"]["slug"]))
 
+        _pagination_store.set(saved_pagination)
         yield items
 
     @post
