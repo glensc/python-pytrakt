@@ -48,47 +48,47 @@ def test_user_collections():
 
 def test_user_list():
     sean = User('sean')
-    assert all([isinstance(l, UserList) for l in sean.lists])
+    assert all([isinstance(user_list, UserList) for user_list in sean.lists])
 
     data = dict(name='Star Wars in machete order',
                 description='Some descriptive text',
                 privacy='public',
                 display_numbers=True)
     # create list
-    l = UserList.create(creator=sean.username, **data)
+    user_list = UserList.create(creator=sean.username, **data)
     for k, v in data.items():
-        assert getattr(l, k) == v
+        assert getattr(user_list, k) == v
 
     # get list
-    l = UserList.get(data['name'], sean.username)
-    assert len(list(l)) == 5
+    user_list = UserList.get(data['name'], sean.username)
+    assert len(list(user_list)) == 5
 
-    l = sean.get_list(data['name'])
+    user_list = sean.get_list(data['name'])
     for k, v in data.items():
-        assert getattr(l, k) == v
-    assert len(list(l)) == 5
+        assert getattr(user_list, k) == v
+    assert len(list(user_list)) == 5
 
     # enumerate list items
     instancetypes = (Movie, TVShow, TVSeason, TVEpisode, Person)
-    assert all([isinstance(k, instancetypes) for k in l])
+    assert all([isinstance(k, instancetypes) for k in user_list])
 
     # PUT to add and remove items from list
-    l.add_items()
+    user_list.add_items()
     for k, v in data.items():
-        assert getattr(l, k) == v
-    l.remove_items()
+        assert getattr(user_list, k) == v
+    user_list.remove_items()
     for k, v in data.items():
-        assert getattr(l, k) == v
+        assert getattr(user_list, k) == v
 
     # like and unlike a list
-    l.like()
-    l.unlike()
+    user_list.like()
+    user_list.unlike()
 
     # just test to ensure that iterating over list items works
-    l.__iter__()
+    user_list.__iter__()
 
     # delete entire list
-    l.delete_list()
+    user_list.delete_list()
 
 
 def test_follow_user():
