@@ -276,13 +276,13 @@ class UserList(DataClassMixin(ListDescription), IdsMixin):
         ulist = cls(creator=creator, **data)
         page = 1
         while True:
-            prev_count = len(ulist._items)
-            ulist.get_items(page=page, limit=250)
+            page_items = ulist.get_items(page=page, limit=250)
+            ulist._items.extend(page_items)
             pagination = get_pagination()
             if pagination is not None:
                 if page >= pagination.page_count:
                     break
-            elif len(ulist._items) == prev_count:
+            elif not page_items:
                 break
             page += 1
 
@@ -301,8 +301,9 @@ class UserList(DataClassMixin(ListDescription), IdsMixin):
             user=slugify(self.creator), id=self.slug, page=page, limit=limit
         )
         if not data:
-            yield self._items
+            yield []
 
+        items = []
         for item in data:
             # match list item type
             if "type" not in item:
@@ -310,19 +311,19 @@ class UserList(DataClassMixin(ListDescription), IdsMixin):
             item_type = item["type"]
             item_data = item.pop(item_type)
             if item_type == "movie":
-                self._items.append(
+                items.append(
                     Movie(
                         item_data["title"], item_data["year"], item_data["ids"]["slug"]
                     )
                 )
             elif item_type == "show":
-                self._items.append(TVShow(item_data["title"], item_data["ids"]["slug"]))
+                items.append(TVShow(item_data["title"], item_data["ids"]["slug"]))
             elif item_type == "season":
                 show_data = item.pop("show")
                 season = TVSeason(
                     show_data["title"], item_data["number"], show_data["ids"]["slug"]
                 )
-                self._items.append(season)
+                items.append(season)
             elif item_type == "episode":
                 show_data = item.pop("show")
                 episode = TVEpisode(
@@ -331,11 +332,11 @@ class UserList(DataClassMixin(ListDescription), IdsMixin):
                     item_data["number"],
                     show_id=show_data["ids"]["trakt"],
                 )
-                self._items.append(episode)
+                items.append(episode)
             elif item_type == "person":
-                self._items.append(Person(item_data["name"], item_data["ids"]["slug"]))
+                items.append(Person(item_data["name"], item_data["ids"]["slug"]))
 
-        yield self._items
+        yield items
 
     @post
     def add_items(self, *items):
