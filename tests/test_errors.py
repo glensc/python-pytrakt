@@ -90,7 +90,10 @@ def test_oauth_refresh_exception_handles_missing_or_invalid_response_json():
 
 def test_oauth_refresh_exception_string_for_error_only():
     texc = OAuthRefreshException(error='invalid_grant')
-    assert str(texc) == 'Unauthorized - OAuth token refresh failed: invalid_grant'
+    assert (
+        str(texc) ==
+        'Unauthorized - OAuth token refresh failed: invalid_grant'
+    )
 
 
 def test_403_exception():
