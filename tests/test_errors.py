@@ -75,10 +75,10 @@ def test_oauth_refresh_exception_explicit_values_override_response_data():
 
 
 def test_oauth_refresh_exception_handles_missing_or_invalid_response_json():
-    no_response = OAuthRefreshException(response=object())
-    assert no_response.error is None
-    assert no_response.error_description is None
-    assert str(no_response) == 'Unauthorized - OAuth token refresh failed'
+    invalid_response = OAuthRefreshException(response=object())
+    assert invalid_response.error is None
+    assert invalid_response.error_description is None
+    assert str(invalid_response) == 'Unauthorized - OAuth token refresh failed'
 
     bad_response = Mock()
     bad_response.json.side_effect = ValueError('bad json')
