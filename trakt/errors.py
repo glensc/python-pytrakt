@@ -73,7 +73,7 @@ class OAuthRefreshException(OAuthException):
 
     def __init__(self, response=None):
         super().__init__(response)
-        self.data = self.response.json()
+        self.data = self._error_data(self.response)
 
     @property
     def error(self):
@@ -82,6 +82,30 @@ class OAuthRefreshException(OAuthException):
     @property
     def error_description(self):
         return self.data["error_description"]
+
+    @classmethod
+    def _error_data(cls, response):
+        data = cls._response_json(response)
+
+        return {
+            "error": data.get("error", ""),
+            "error_description": data.get("error_description", ""),
+        }
+
+    @staticmethod
+    def _response_json(response):
+        if response is None:
+            return {}
+
+        try:
+            data = response.json()
+        except (ValueError, AttributeError):
+            return {}
+
+        if not isinstance(data, dict):
+            return {}
+
+        return data
 
 
 class ForbiddenException(TraktException):
