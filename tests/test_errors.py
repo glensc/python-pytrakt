@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 """unit tests to define behavior of custom exception types"""
+from unittest.mock import MagicMock
+
 from trakt.errors import (BadRequestException, ConflictException,
                           ForbiddenException, NotFoundException,
-                          OAuthException, ProcessException, RateLimitException,
+                          OAuthException, OAuthRefreshException,
+                          ProcessException, RateLimitException,
                           TraktException, TraktInternalException,
                           TraktUnavailable)
 
@@ -74,3 +77,51 @@ def test_503_exception():
     assert texc.http_code == 503
     assert texc.message == 'Trakt Unavailable - server overloaded'
     assert str(texc) == texc.message
+
+
+def test_oauth_refresh_exception_default_str():
+    texc = OAuthRefreshException()
+    assert str(texc) == 'Unauthorized - OAuth token refresh failed'
+
+
+def test_oauth_refresh_exception_from_response_json():
+    response = MagicMock()
+    response.json.return_value = {'error': 'invalid_grant', 'error_description': 'Token has expired'}
+    texc = OAuthRefreshException(response=response)
+    assert texc.error == 'invalid_grant'
+    assert texc.error_description == 'Token has expired'
+    assert str(texc) == 'Unauthorized - OAuth token refresh failed: invalid_grant - Token has expired'
+
+
+def test_oauth_refresh_exception_explicit_args_override_response():
+    response = MagicMock()
+    response.json.return_value = {'error': 'from_response', 'error_description': 'from_response_desc'}
+    texc = OAuthRefreshException(response=response, error='explicit_error', error_description='explicit_desc')
+    assert texc.error == 'explicit_error'
+    assert texc.error_description == 'explicit_desc'
+
+
+def test_oauth_refresh_exception_no_response():
+    texc = OAuthRefreshException(response=None)
+    assert texc.error is None
+    assert texc.error_description is None
+    assert str(texc) == 'Unauthorized - OAuth token refresh failed'
+
+
+def test_oauth_refresh_exception_json_raises():
+    response = MagicMock()
+    response.json.side_effect = ValueError('not json')
+    texc = OAuthRefreshException(response=response)
+    assert texc.error is None
+    assert texc.error_description is None
+
+
+def test_oauth_refresh_exception_error_only_str():
+    texc = OAuthRefreshException(error='invalid_client')
+    assert str(texc) == 'Unauthorized - OAuth token refresh failed: invalid_client'
+
+
+def test_oauth_refresh_exception_cause():
+    cause = RuntimeError('original')
+    texc = OAuthRefreshException(cause=cause)
+    assert texc.cause is cause
