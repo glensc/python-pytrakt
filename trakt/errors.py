@@ -69,6 +69,8 @@ class OAuthException(TraktException):
 
 
 class OAuthRefreshException(OAuthException):
+    message = 'Unauthorized - OAuth token refresh failed'
+
     def __init__(self, response=None):
         super().__init__(response)
         self.data = self.response.json()
