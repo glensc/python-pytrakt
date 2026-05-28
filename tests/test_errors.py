@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 """unit tests to define behavior of custom exception types"""
+from unittest.mock import Mock
+
 from trakt.errors import (BadRequestException, ConflictException,
                           ForbiddenException, NotFoundException,
-                          OAuthException, ProcessException, RateLimitException,
-                          TraktException, TraktInternalException,
+                          OAuthException, OAuthRefreshException,
+                          ProcessException, RateLimitException, TraktException,
+                          TraktInternalException,
                           TraktUnavailable)
 
 
@@ -25,6 +28,69 @@ def test_401_exception():
     assert texc.http_code == 401
     assert texc.message == 'Unauthorized - OAuth must be provided'
     assert str(texc) == texc.message
+
+
+def test_oauth_refresh_exception_default_string():
+    texc = OAuthRefreshException()
+    assert texc.error is None
+    assert texc.error_description is None
+    assert str(texc) == 'Unauthorized - OAuth token refresh failed'
+
+
+def test_oauth_refresh_exception_parses_response_data():
+    response = Mock()
+    response.json.return_value = {
+        'error': 'invalid_grant',
+        'error_description': 'refresh token is invalid',
+    }
+
+    texc = OAuthRefreshException(response=response)
+
+    assert texc.error == 'invalid_grant'
+    assert texc.error_description == 'refresh token is invalid'
+    assert (
+        str(texc) ==
+        'Unauthorized - OAuth token refresh failed: invalid_grant - '
+        'refresh token is invalid'
+    )
+
+
+def test_oauth_refresh_exception_explicit_values_override_response_data():
+    response = Mock()
+    response.json.return_value = {
+        'error': 'invalid_grant',
+        'error_description': 'refresh token is invalid',
+    }
+
+    texc = OAuthRefreshException(
+        response=response,
+        error='invalid_client',
+        error_description='client authentication failed',
+        cause='unit-test-cause',
+    )
+
+    assert texc.error == 'invalid_client'
+    assert texc.error_description == 'client authentication failed'
+    assert texc.cause == 'unit-test-cause'
+
+
+def test_oauth_refresh_exception_handles_missing_or_invalid_response_json():
+    no_response = OAuthRefreshException(response=object())
+    assert no_response.error is None
+    assert no_response.error_description is None
+    assert str(no_response) == 'Unauthorized - OAuth token refresh failed'
+
+    bad_response = Mock()
+    bad_response.json.side_effect = ValueError('bad json')
+    texc = OAuthRefreshException(response=bad_response)
+    assert texc.error is None
+    assert texc.error_description is None
+    assert str(texc) == 'Unauthorized - OAuth token refresh failed'
+
+
+def test_oauth_refresh_exception_string_for_error_only():
+    texc = OAuthRefreshException(error='invalid_grant')
+    assert str(texc) == 'Unauthorized - OAuth token refresh failed: invalid_grant'
 
 
 def test_403_exception():
