@@ -81,11 +81,12 @@ class OAuthRefreshException(OAuthException):
         self._error_description = error_description if error_description is not None else data.get("error_description")
 
     def _load_data(self):
+        from json import JSONDecodeError
         if self.response is None:
             return {}
         try:
             data = self.response.json()
-        except Exception:
+        except (ValueError, JSONDecodeError, AttributeError):
             return {}
         if not isinstance(data, dict):
             return {}
