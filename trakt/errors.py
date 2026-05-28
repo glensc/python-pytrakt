@@ -69,7 +69,7 @@ class OAuthException(TraktException):
 
 
 class OAuthRefreshException(OAuthException):
-    """TraktException type to be raised when OAuth token refresh fails"""
+    """Raised when OAuth token refresh fails."""
 
     message = 'Unauthorized - OAuth token refresh failed'
 
