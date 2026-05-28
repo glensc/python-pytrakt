@@ -85,8 +85,9 @@ class OAuthRefreshException(OAuthException):
             return {}
 
         try:
-            return self.response.json()
-        except (AttributeError, ValueError):
+            data = self.response.json()
+            return data if isinstance(data, dict) else {}
+        except (AttributeError, ValueError, TypeError):
             return {}
 
     @property
