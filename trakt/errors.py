@@ -109,6 +109,14 @@ class OAuthRefreshException(OAuthException):
 
         return data
 
+    def __str__(self):
+        if self.error and self.error_description:
+            return f'{self.message}: {self.error} - {self.error_description}'
+
+        if self.error:
+            return f'{self.message}: {self.error}'
+
+        return self.message
 
 class ForbiddenException(TraktException):
     """TraktException type to be raised when a 403 return code is received"""
