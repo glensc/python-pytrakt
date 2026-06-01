@@ -2,9 +2,71 @@
 import re
 import unicodedata
 from datetime import datetime, timezone
+from typing import Iterator, Callable, Optional, NamedTuple
+
+import trakt._pagination as _pagination_store
 
 __author__ = 'Jon Nappi'
-__all__ = ['slugify', 'airs_date', 'now', 'timestamp', 'extract_ids']
+__all__ = ['slugify', 'airs_date', 'now', 'timestamp', 'extract_ids',
+           'validate_limit', 'Pagination', 'iter_pages']
+
+_MAX_LIMIT = 250
+
+
+class Pagination(NamedTuple):
+    """Pagination metadata from a Trakt.tv API response."""
+    item_count: int
+    limit: int
+    page: int
+    page_count: int
+
+
+def _get_pagination() -> Optional[Pagination]:
+    """Return the pagination info from the most recent paginated API response.
+
+    Returns a :class:`Pagination` namedtuple with *item_count*, *limit*,
+    *page*, and *page_count* fields, or ``None`` when the last response did
+    not include ``x-pagination-*`` headers (e.g. non-paginated endpoints).
+    """
+    return _pagination_store.get()
+
+
+def iter_pages(fn: Callable, *args, **kwargs) -> Iterator:
+    """Iterate over every page returned by a paginated endpoint.
+
+    Calls *fn* with ``page=1, 2, …`` until either the response contains an
+    ``x-pagination-page-count`` header and the last page has been fetched, or
+    the response is empty (fallback when no pagination headers are present).
+
+    :param fn: A callable that accepts a *page* keyword argument and returns
+        the page's data.
+    :param args: Positional arguments forwarded to *fn*.
+    :param kwargs: Keyword arguments forwarded to *fn* (``page`` is
+        overridden on each call).
+    """
+    page = 1
+    while True:
+        kwargs['page'] = page
+        data = fn(*args, **kwargs)
+        if not data:
+            break
+        yield data
+        pagination = _get_pagination()
+        if pagination is None:
+            break
+        if page >= pagination.page_count:
+            break
+        page += 1
+
+
+def validate_limit(limit):
+    """Raise :class:`ValueError` if *limit* exceeds the maximum allowed value
+    of 250 items per page imposed by the Trakt.tv API.
+    """
+    if limit is not None and limit > _MAX_LIMIT:
+        raise ValueError(
+            f"limit must not exceed {_MAX_LIMIT} items per page, got {limit}"
+        )
 
 
 def slugify(value):

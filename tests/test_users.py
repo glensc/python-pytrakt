@@ -36,47 +36,59 @@ def test_user_collections():
         assert all([isinstance(m, Movie) for m in sean.movie_collection])
         assert all([isinstance(s, TVShow) for s in sean.show_collection])
 
+    movie_page = sean.collection('movies', page=1, limit=250)
+    show_page = sean.collection('shows', page=1, limit=250)
+    assert movie_page
+    assert show_page
+    assert all(['movie' in item for item in movie_page])
+    assert all(['show' in item for item in show_page])
+    assert sean.collection('movies', page=2, limit=250) == []
+    assert sean.collection('shows', page=2, limit=250) == []
+
 
 def test_user_list():
     sean = User('sean')
-    assert all([isinstance(l, UserList) for l in sean.lists])
+    assert all([isinstance(user_list, UserList) for user_list in sean.lists])
 
     data = dict(name='Star Wars in machete order',
                 description='Some descriptive text',
                 privacy='public',
                 display_numbers=True)
     # create list
-    l = UserList.create(creator=sean.username, **data)
+    user_list = UserList.create(creator=sean.username, **data)
     for k, v in data.items():
-        assert getattr(l, k) == v
+        assert getattr(user_list, k) == v
 
     # get list
-    l = UserList.get(data['name'], sean.username)
-    l = sean.get_list(data['name'])
+    user_list = UserList.get(data['name'], sean.username)
+    assert len(list(user_list)) == 5
+
+    user_list = sean.get_list(data['name'])
     for k, v in data.items():
-        assert getattr(l, k) == v
+        assert getattr(user_list, k) == v
+    assert len(list(user_list)) == 5
 
     # enumerate list items
     instancetypes = (Movie, TVShow, TVSeason, TVEpisode, Person)
-    assert all([isinstance(k, instancetypes) for k in l])
+    assert all([isinstance(k, instancetypes) for k in user_list])
 
     # PUT to add and remove items from list
-    l.add_items()
+    user_list.add_items()
     for k, v in data.items():
-        assert getattr(l, k) == v
-    l.remove_items()
+        assert getattr(user_list, k) == v
+    user_list.remove_items()
     for k, v in data.items():
-        assert getattr(l, k) == v
+        assert getattr(user_list, k) == v
 
     # like and unlike a list
-    l.like()
-    l.unlike()
+    user_list.like()
+    user_list.unlike()
 
     # just test to ensure that iterating over list items works
-    l.__iter__()
+    user_list.__iter__()
 
     # delete entire list
-    l.delete_list()
+    user_list.delete_list()
 
 
 def test_follow_user():
@@ -107,6 +119,15 @@ def test_user_watchlists():
         assert all([isinstance(m, Movie) for m in sean.watchlist_movies])
         assert all([isinstance(s, TVShow) for s in sean.watchlist_shows])
 
+    movie_page = sean.watchlist('movies', page=1, limit=250)
+    show_page = sean.watchlist('shows', page=1, limit=250)
+    assert movie_page
+    assert show_page
+    assert all([item['type'] == 'movie' for item in movie_page])
+    assert all([item['type'] == 'show' for item in show_page])
+    assert sean.watchlist('movies', page=2, limit=250) == []
+    assert sean.watchlist('shows', page=2, limit=250) == []
+
 
 def test_watching():
     sean = User('sean')
@@ -123,6 +144,13 @@ def test_watched():
     for _ in range(2):
         assert all([isinstance(m, Movie) for m in sean.watched_movies])
         assert all([isinstance(s, TVShow) for s in sean.watched_shows])
+
+    movie_page = sean.watched('movies', page=1, limit=250)
+    show_page = sean.watched('shows', page=1, limit=250)
+    assert all(['movie' in item for item in movie_page])
+    assert all(['show' in item for item in show_page])
+    assert sean.watched('movies', page=2, limit=250) == []
+    assert sean.watched('shows', page=2, limit=250) == []
 
 
 def test_stats():

@@ -13,7 +13,7 @@ from trakt.sync import (Scrobbler, add_to_collection, add_to_history,
                         add_to_watchlist, checkin_media, comment,
                         delete_checkin, rate, remove_from_collection,
                         remove_from_history, remove_from_watchlist, search)
-from trakt.utils import airs_date, slugify
+from trakt.utils import airs_date, slugify, validate_limit
 
 __author__ = 'Jon Nappi'
 __all__ = ['dismiss_recommendation', 'get_recommended_shows', 'genres',
@@ -44,6 +44,7 @@ def get_recommended_shows(page=1, limit=10):
     history and your friends. Results are returned with the top recommendation
     first.
     """
+    validate_limit(limit)
     data = yield 'recommendations/shows?page={page}&limit={limit}'.format(
         page=page, limit=limit
     )
@@ -59,6 +60,7 @@ def genres():
 
 @get
 def popular_shows(page=1, limit=10, extended=None):
+    validate_limit(limit)
     uri = 'shows/popular?page={page}&limit={limit}'.format(
         page=page, limit=limit
     )
@@ -72,6 +74,7 @@ def popular_shows(page=1, limit=10, extended=None):
 @get
 def trending_shows(page=1, limit=10, extended=None):
     """All :class:`TVShow`'s being watched right now"""
+    validate_limit(limit)
     uri = 'shows/trending?page={page}&limit={limit}'.format(
         page=page, limit=limit
     )
@@ -89,6 +92,7 @@ def updated_shows(timestamp=None, page=1, limit=10, extended=None):
     store the timestamp so you can be efficient in using this method.
     """
     y_day = datetime.now() - timedelta(1)
+    validate_limit(limit)
     ts = timestamp or int(y_day.strftime('%s')) * 1000
     uri = 'shows/updates/{start_date}?page={page}&limit={limit}'.format(
         start_date=ts, page=page, limit=limit
@@ -110,6 +114,7 @@ def recommended_shows(time_period='weekly', page=1, limit=10, extended=None):
         raise ValueError('time_period must be one of {}'.format(
             valid_time_period
         ))
+    validate_limit(limit)
 
     uri = 'shows/recommended/{time_period}?page={page}&limit={limit}'.format(
         time_period=time_period, page=page, limit=limit
@@ -133,6 +138,7 @@ def played_shows(time_period='weekly', page=1, limit=10, extended=None):
         raise ValueError('time_period must be one of {}'.format(
             valid_time_period
         ))
+    validate_limit(limit)
 
     uri = 'shows/played/{time_period}?page={page}&limit={limit}'.format(
         time_period=time_period, page=page, limit=limit
@@ -155,6 +161,7 @@ def watched_shows(time_period='weekly', page=1, limit=10, extended=None):
         raise ValueError('time_period must be one of {}'.format(
             valid_time_period
         ))
+    validate_limit(limit)
 
     uri = 'shows/watched/{time_period}?page={page}&limit={limit}'.format(
         time_period=time_period, page=page, limit=limit
@@ -177,6 +184,7 @@ def collected_shows(time_period='weekly', page=1, limit=10, extended=None):
         raise ValueError('time_period must be one of {}'.format(
             valid_time_period
         ))
+    validate_limit(limit)
 
     uri = 'shows/collected/{time_period}?page={page}&limit={limit}'.format(
         time_period=time_period, page=page, limit=limit
@@ -194,6 +202,7 @@ def anticipated_shows(page=1, limit=10, extended=None):
     Return most anticipated shows based on the number of lists
         a show appears on.
     """
+    validate_limit(limit)
     uri = 'shows/anticipated?page={page}&limit={limit}'.format(
         page=page, limit=limit
     )
