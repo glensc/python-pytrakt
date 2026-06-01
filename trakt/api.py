@@ -233,6 +233,17 @@ class TokenAuth(AuthBase):
             self.refresh_token()
 
         self.TOKEN_UNDER_REFRESH = False
+        try:
+            current = datetime.now(tz=timezone.utc)
+            expires_at = datetime.fromtimestamp(self.config.OAUTH_EXPIRES_AT, tz=timezone.utc)
+            margin = expires_at - current
+            if margin > timedelta(**self.TOKEN_REFRESH_MARGIN):
+                self.OAUTH_TOKEN_VALID = True
+            else:
+                self.logger.debug("Token expires in %s, refreshing (margin: %s)", margin, self.TOKEN_REFRESH_MARGIN)
+                self.refresh_token()
+        finally:
+            self.TOKEN_UNDER_REFRESH = False
 
     def refresh_token(self):
         """Request Trakt API for a new valid OAuth token using refresh_token"""
