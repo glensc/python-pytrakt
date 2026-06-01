@@ -11,7 +11,7 @@ from trakt import errors
 from trakt.config import AuthConfig
 from trakt.core import TIMEOUT
 from trakt.errors import (BadRequestException, BadResponseException,
-                          OAuthException)
+                          OAuthException, OAuthRefreshException)
 
 __author__ = 'Elan Ruusamäe'
 
@@ -166,9 +166,6 @@ class TokenAuth(AuthBase):
     #: The OAuth2 Redirect URI for your OAuth Application
     REDIRECT_URI: str = 'urn:ietf:wg:oauth:2.0:oob'
 
-    #: How many times to attempt token auth refresh before failing
-    MAX_RETRIES = 1
-
     # Time margin before token expiry when refresh should be triggered
     TOKEN_REFRESH_MARGIN = {'minutes': 10}
 
@@ -180,7 +177,6 @@ class TokenAuth(AuthBase):
         self.client = client
         # OAuth token validity checked
         self.OAUTH_TOKEN_VALID = None
-        self.refresh_attempts = 0
         self.TOKEN_UNDER_REFRESH = False
 
     def __call__(self, r):
@@ -223,16 +219,6 @@ class TokenAuth(AuthBase):
         critical operations while also maximizing the token's useful lifetime.
         """
 
-        current = datetime.now(tz=timezone.utc)
-        expires_at = datetime.fromtimestamp(self.config.OAUTH_EXPIRES_AT, tz=timezone.utc)
-        margin = expires_at - current
-        if margin > timedelta(**self.TOKEN_REFRESH_MARGIN):
-            self.OAUTH_TOKEN_VALID = True
-        else:
-            self.logger.debug("Token expires in %s, refreshing (margin: %s)", margin, self.TOKEN_REFRESH_MARGIN)
-            self.refresh_token()
-
-        self.TOKEN_UNDER_REFRESH = False
         try:
             current = datetime.now(tz=timezone.utc)
             expires_at = datetime.fromtimestamp(self.config.OAUTH_EXPIRES_AT, tz=timezone.utc)
@@ -248,11 +234,6 @@ class TokenAuth(AuthBase):
     def refresh_token(self):
         """Request Trakt API for a new valid OAuth token using refresh_token"""
 
-        if self.refresh_attempts >= self.MAX_RETRIES:
-            self.logger.error("Max token refresh attempts reached. Manual intervention required.")
-            return
-        self.refresh_attempts += 1
-
         self.logger.info("OAuth token has expired, refreshing now...")
         data = {
             'client_id': self.config.CLIENT_ID,
@@ -264,24 +245,9 @@ class TokenAuth(AuthBase):
 
         try:
             response = self.client.post('oauth/token', data)
-            self.refresh_attempts = 0
         except (OAuthException, BadRequestException) as e:
-            if e.response is not None:
-                try:
-                    data = e.response.json()
-                    error = data.get("error")
-                    error_description = data.get("error_description")
-                except JSONDecodeError:
-                    error = "Invalid JSON response"
-                    error_description = e.response.text
-            else:
-                error = "No error description"
-                error_description = ""
-            self.logger.error(
-                "%s - Unable to refresh expired OAuth token (%s) %s",
-                e.http_code, error, error_description
-            )
-            return
+            self.OAUTH_TOKEN_VALID = False
+            raise OAuthRefreshException(response=e.response) from e
 
         self.config.update(
             OAUTH_TOKEN=response.get("access_token"),
