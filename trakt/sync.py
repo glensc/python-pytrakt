@@ -607,8 +607,7 @@ class Scrobbler:
 
         :param uri: The uri to post to
         """
-        payload = dict(progress=self.progress, app_version=self.version,
-                       date=self.date)
+        payload = dict(progress=self.progress)
         payload.update(self.media.to_json_singular())
         response = yield uri, payload
         yield response
