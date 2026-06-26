@@ -2,7 +2,7 @@
 from trakt.movies import Movie
 from trakt.people import Person
 from trakt.tv import TVEpisode, TVSeason, TVShow
-from trakt.users import (Request, User, UserList, get_all_requests,
+from trakt.users import (PublicList, Request, User, UserList, get_all_requests,
                          get_user_settings)
 
 
@@ -141,3 +141,19 @@ def test_liked_lists():
 
     lists = sean.get_liked_lists('comments')
     assert isinstance(lists, list)
+
+
+def test_process_items_ignores_unknown_fields():
+    items = [{
+        'rank': 1,
+        'id': 101,
+        'listed_at': '2024-01-01T00:00:00.000Z',
+        'type': 'movie',
+        'my_rating': 8,
+        'movie': {'title': 'TRON', 'year': 1982,
+                  'ids': {'trakt': 1, 'slug': 'tron'}},
+    }]
+    entries = list(PublicList._process_items(items))
+    assert len(entries) == 1
+    assert entries[0].id == 101
+    assert entries[0].data['title'] == 'TRON'
