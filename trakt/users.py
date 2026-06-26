@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Interfaces to all of the User objects offered by the Trakt.tv API"""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from typing import Any, NamedTuple, Optional, Union
 
 from trakt.core import delete, get, post
@@ -182,13 +182,17 @@ class PublicList(DataClassMixin(ListDescription), IdsMixin):
 
     @staticmethod
     def _process_items(items):
+        entry_fields = {f.name for f in fields(ListEntry)}
         for item in items:
             if "type" not in item:
                 continue
             data = item.pop(item["type"])
             if "show" in item:
                 data["show"] = item.pop("show")
-            yield ListEntry(**item, data=data)
+            # Drop any fields the API returns that ListEntry does not declare
+            # (e.g. "my_rating") so they don't break construction.
+            kwargs = {k: v for k, v in item.items() if k in entry_fields}
+            yield ListEntry(**kwargs, data=data)
 
 
 class UserList(DataClassMixin(ListDescription), IdsMixin):
