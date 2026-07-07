@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import pytest
 from trakt.movies import Movie
 from trakt.people import Person
 from trakt.tv import TVEpisode, TVSeason, TVShow
@@ -130,6 +131,35 @@ def test_get_watched_movies():
     watched_movies = sean.get_watched_movies()
     assert isinstance(watched_movies, list)
     assert all([isinstance(m, Movie) for m in watched_movies])
+
+
+def test_get_watched_movies_with_pagination():
+    sean = User('sean')
+    watched_movies = sean.get_watched_movies(page=1, limit=1)
+    assert isinstance(watched_movies, list)
+    assert len(watched_movies) == 1
+    assert isinstance(watched_movies[0], Movie)
+    assert watched_movies[0].title == 'Batman Begins'
+
+
+def test_get_watched_movies_invalid_page():
+    sean = User('sean')
+    with pytest.raises(ValueError):
+        sean.get_watched_movies(page='bad')
+    with pytest.raises(ValueError):
+        sean.get_watched_movies(page=0)
+    with pytest.raises(ValueError):
+        sean.get_watched_movies(page=True)
+
+
+def test_get_watched_movies_invalid_limit():
+    sean = User('sean')
+    with pytest.raises(ValueError):
+        sean.get_watched_movies(limit='bad')
+    with pytest.raises(ValueError):
+        sean.get_watched_movies(limit=-1)
+    with pytest.raises(ValueError):
+        sean.get_watched_movies(limit=False)
 
 
 def test_stats():

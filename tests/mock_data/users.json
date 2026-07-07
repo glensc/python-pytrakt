@@ -612,6 +612,15 @@
             }
         ]
     },
+    "users/sean/watched/movies?page=1&limit=1": {
+        "GET": [
+            {
+                "plays":4,
+                "last_watched_at":"2014-10-11T17:00:54.000Z",
+                "movie":{"title":"Batman Begins","year":2005,"ids":{"trakt":6,"slug":"batman-begins-2005","imdb":"tt0372784","tmdb":272}}
+            }
+        ]
+    },
     "users/sean/watched/shows": {
         "GET": [
             {

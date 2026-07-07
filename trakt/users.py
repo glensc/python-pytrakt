@@ -9,7 +9,7 @@ from trakt.mixins import DataClassMixin, IdsMixin
 from trakt.movies import Movie
 from trakt.people import Person
 from trakt.tv import TVEpisode, TVSeason, TVShow
-from trakt.utils import slugify
+from trakt.utils import build_uri, slugify
 
 __author__ = 'Jon Nappi'
 __all__ = ['User', 'UserList', 'PublicList', 'Request', 'follow', 'get_all_requests',
@@ -523,15 +523,21 @@ class User:
         return watched_movies
 
     @get
-    def get_watched_movies(self):
-        """Watched progress for all :class:`Movie` objects for this
-        :class:`User`.
+    def get_watched_movies(self, page=None, limit=None):
+        """Watched progress for :class:`Movie` objects for this :class:`User`.
 
-        :return: List of :class:`Movie` instances
+        :param page: Optional page number for pagination.
+        :param limit: Optional number of items per page.
+        :return: List of :class:`Movie` instances for the requested page
         """
-        data = yield 'users/{user}/watched/movies'.format(
-            user=slugify(self.username)
+        uri = build_uri(
+            'users/{user}/watched/movies',
+            user=slugify(self.username),
+            page=page,
+            limit=limit,
         )
+
+        data = yield uri
         yield self._build_watched_movies(data)
 
     @property
