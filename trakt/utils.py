@@ -56,3 +56,22 @@ def extract_ids(id_dict):
     """
     id_dict.update(id_dict.pop('ids', {}))
     return id_dict
+
+
+def _validate_pagination_param(name, value):
+    """Validate and coerce a pagination parameter to a positive integer.
+
+    :param name: Parameter name used in error messages.
+    :param value: Value to validate.
+    :return: The validated integer value.
+    :raises ValueError: If value is not a valid positive integer.
+    """
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        raise ValueError(f'{name} must be a valid integer')
+
+    if value < 1:
+        raise ValueError(f'{name} must be a positive integer')
+
+    return value
