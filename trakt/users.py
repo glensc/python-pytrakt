@@ -509,6 +509,14 @@ class User:
                 self._show_collection.append(show)
         yield self._show_collection
 
+    def _build_watched_movies(self, data):
+        watched_movies = []
+        for movie in data:
+            movie_data = movie.pop('movie')
+            movie_data.update(movie)
+            watched_movies.append(Movie(**movie_data))
+        return watched_movies
+
     @property
     @get
     def watched_movies(self):
@@ -519,11 +527,7 @@ class User:
             data = yield 'users/{user}/watched/movies'.format(
                 user=slugify(self.username)
             )
-            self._watched_movies = []
-            for movie in data:
-                movie_data = movie.pop('movie')
-                movie_data.update(movie)
-                self._watched_movies.append(Movie(**movie_data))
+            self._watched_movies = self._build_watched_movies(data)
         yield self._watched_movies
 
     @property
