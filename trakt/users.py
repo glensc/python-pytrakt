@@ -559,13 +559,16 @@ class User:
                 user=slugify(self.username)
             )
             all_data = list(client.get(base_uri) or [])
-            page_count = int(
-                client.last_response_headers.get('X-Pagination-Page-Count', 1)
-            )
+            try:
+                page_count = int(
+                    client.last_response_headers.get('X-Pagination-Page-Count', 1)
+                )
+            except (ValueError, TypeError):
+                page_count = 1
             for page in range(2, page_count + 1):
-                page_data = client.get('{uri}?page={page}'.format(
-                    uri=base_uri, page=page
-                ))
+                page_data = client.get(
+                    '{uri}?{query}'.format(uri=base_uri, query=urlencode({'page': page}))
+                )
                 if page_data:
                     all_data.extend(page_data)
             self._watched_movies = self._build_watched_movies(all_data)
