@@ -13,7 +13,7 @@ from trakt.sync import (Scrobbler, add_to_collection, add_to_history,
                         add_to_watchlist, checkin_media, comment,
                         delete_checkin, rate, remove_from_collection,
                         remove_from_history, remove_from_watchlist, search)
-from trakt.utils import airs_date, slugify
+from trakt.utils import airs_date, build_uri, slugify
 
 __author__ = 'Jon Nappi'
 __all__ = ['dismiss_recommendation', 'get_recommended_shows', 'genres',
@@ -44,9 +44,7 @@ def get_recommended_shows(page=1, limit=10):
     history and your friends. Results are returned with the top recommendation
     first.
     """
-    data = yield 'recommendations/shows?page={page}&limit={limit}'.format(
-        page=page, limit=limit
-    )
+    data = yield build_uri('recommendations/shows', page=page, limit=limit)
     yield [TVShow(**show) for show in data]
 
 
@@ -59,11 +57,7 @@ def genres():
 
 @get
 def popular_shows(page=1, limit=10, extended=None):
-    uri = 'shows/popular?page={page}&limit={limit}'.format(
-        page=page, limit=limit
-    )
-    if extended:
-        uri += '&extended={extended}'.format(extended=extended)
+    uri = build_uri('shows/popular', page=page, limit=limit, extended=extended)
 
     data = yield uri
     yield [TVShow(**show) for show in data]
@@ -72,11 +66,7 @@ def popular_shows(page=1, limit=10, extended=None):
 @get
 def trending_shows(page=1, limit=10, extended=None):
     """All :class:`TVShow`'s being watched right now"""
-    uri = 'shows/trending?page={page}&limit={limit}'.format(
-        page=page, limit=limit
-    )
-    if extended:
-        uri += '&extended={extended}'.format(extended=extended)
+    uri = build_uri('shows/trending', page=page, limit=limit, extended=extended)
 
     data = yield uri
     yield [TVShow(**show['show']) for show in data]
@@ -90,11 +80,8 @@ def updated_shows(timestamp=None, page=1, limit=10, extended=None):
     """
     y_day = datetime.now() - timedelta(1)
     ts = timestamp or int(y_day.strftime('%s')) * 1000
-    uri = 'shows/updates/{start_date}?page={page}&limit={limit}'.format(
-        start_date=ts, page=page, limit=limit
-    )
-    if extended:
-        uri += '&extended={extended}'.format(extended=extended)
+    uri = build_uri('shows/updates/{start_date}', start_date=ts, page=page,
+                    limit=limit, extended=extended)
 
     data = yield uri
     yield [TVShow(**show) for show in data]
@@ -111,11 +98,9 @@ def recommended_shows(time_period='weekly', page=1, limit=10, extended=None):
             valid_time_period
         ))
 
-    uri = 'shows/recommended/{time_period}?page={page}&limit={limit}'.format(
-        time_period=time_period, page=page, limit=limit
-    )
-    if extended:
-        uri += '&extended={extended}'.format(extended=extended)
+    uri = build_uri('shows/recommended/{time_period}',
+                    time_period=time_period, page=page, limit=limit,
+                    extended=extended)
 
     data = yield uri
     yield [TVShow(**show['show']) for show in data]
@@ -134,11 +119,8 @@ def played_shows(time_period='weekly', page=1, limit=10, extended=None):
             valid_time_period
         ))
 
-    uri = 'shows/played/{time_period}?page={page}&limit={limit}'.format(
-        time_period=time_period, page=page, limit=limit
-    )
-    if extended:
-        uri += '&extended={extended}'.format(extended=extended)
+    uri = build_uri('shows/played/{time_period}', time_period=time_period,
+                    page=page, limit=limit, extended=extended)
 
     data = yield uri
     yield [TVShow(**show['show']) for show in data]
@@ -156,11 +138,8 @@ def watched_shows(time_period='weekly', page=1, limit=10, extended=None):
             valid_time_period
         ))
 
-    uri = 'shows/watched/{time_period}?page={page}&limit={limit}'.format(
-        time_period=time_period, page=page, limit=limit
-    )
-    if extended:
-        uri += '&extended={extended}'.format(extended=extended)
+    uri = build_uri('shows/watched/{time_period}', time_period=time_period,
+                    page=page, limit=limit, extended=extended)
 
     data = yield uri
     yield [TVShow(**show['show']) for show in data]
@@ -178,11 +157,9 @@ def collected_shows(time_period='weekly', page=1, limit=10, extended=None):
             valid_time_period
         ))
 
-    uri = 'shows/collected/{time_period}?page={page}&limit={limit}'.format(
-        time_period=time_period, page=page, limit=limit
-    )
-    if extended:
-        uri += '&extended={extended}'.format(extended=extended)
+    uri = build_uri('shows/collected/{time_period}',
+                    time_period=time_period, page=page, limit=limit,
+                    extended=extended)
 
     data = yield uri
     yield [TVShow(**show['show']) for show in data]
@@ -194,11 +171,8 @@ def anticipated_shows(page=1, limit=10, extended=None):
     Return most anticipated shows based on the number of lists
         a show appears on.
     """
-    uri = 'shows/anticipated?page={page}&limit={limit}'.format(
-        page=page, limit=limit
-    )
-    if extended:
-        uri += '&extended={extended}'.format(extended=extended)
+    uri = build_uri('shows/anticipated', page=page, limit=limit,
+                    extended=extended)
     data = yield uri
     yield [TVShow(**show['show']) for show in data]
 
@@ -270,16 +244,16 @@ class TVShow(IdsMixin):
 
     @property
     def ext(self):
-        return 'shows/{slug}'.format(slug=self.trakt or self.slug)
+        return build_uri('shows/{slug}', slug=self.trakt or self.slug)
 
     @property
     def ext_full(self):
-        return self.ext + '?extended=full'
+        return build_uri(self.ext, extended='full')
 
     @property
     def images_ext(self):
         """Uri to retrieve additional image information."""
-        return self.ext + '?extended=images'
+        return build_uri(self.ext, extended='images')
 
     @property
     @get
@@ -438,7 +412,7 @@ class TVShow(IdsMixin):
         seasons which each contain :class:`TVEpisode` elements
         """
         if self._seasons is None:
-            data = yield self.ext + '/seasons?extended=episodes'
+            data = yield build_uri(self.ext + '/seasons', extended='episodes')
             self._seasons = []
             for season in data:
                 # Prepare episodes
@@ -463,7 +437,7 @@ class TVShow(IdsMixin):
         is found, `None` will be returned.
         """
         if self._last_episode is None:
-            data = yield self.ext + '/last_episode?extended=full'
+            data = yield build_uri(self.ext + '/last_episode', extended='full')
             self._last_episode = data and TVEpisode(show=self.title,
                                                     show_id=self.trakt, **data)
         yield self._last_episode
@@ -475,7 +449,7 @@ class TVShow(IdsMixin):
         is found, `None` will be returned.
         """
         if self._next_episode is None:
-            data = yield self.ext + '/next_episode?extended=full'
+            data = yield build_uri(self.ext + '/next_episode', extended='full')
             self._next_episode = data and TVEpisode(show=self.title,
                                                     show_id=self.trakt, **data)
         yield self._next_episode
@@ -579,7 +553,8 @@ class TVSeason(IdsMixin):
         self.show_id = show_id
         self.season = season
         self.slug = slug or slugify(show)
-        self.ext = 'shows/{id}/seasons/{season}'.format(id=self.slug, season=season)
+        self.ext = build_uri('shows/{id}/seasons/{season}', id=self.slug,
+                             season=season)
         self._comments = self._ratings = None
         self._episodes = self._build_episodes(episodes) if episodes else None
 
@@ -662,9 +637,9 @@ class TVSeason(IdsMixin):
         :param episode: An int corresponding to the number of the episode
             we're trying to retrieve
         """
-        episode_extension = '/episodes/{}?extended=full'.format(episode)
         try:
-            data = yield self.ext + episode_extension
+            data = yield build_uri(self.ext + '/episodes/{episode}',
+                                   episode=episode, extended='full')
             yield TVEpisode(show=self.show, **data)
         except NotFoundException:
             yield None
@@ -777,18 +752,17 @@ class TVEpisode(IdsMixin):
         show_id = getattr(self, "show_id", None)
         if not show_id:
             show_id = slugify(self.show)
-        return 'shows/{id}/seasons/{season}/episodes/{episode}'.format(
-            id=show_id, season=self.season, episode=self.number
-        )
+        return build_uri('shows/{id}/seasons/{season}/episodes/{episode}',
+                         id=show_id, season=self.season, episode=self.number)
 
     @property
     def ext_full(self):
-        return self.ext + '?extended=full'
+        return build_uri(self.ext, extended='full')
 
     @property
     def images_ext(self):
         """Uri to retrieve additional image information"""
-        return self.ext + '?extended=images'
+        return build_uri(self.ext, extended='images')
 
     @staticmethod
     def search(title, year=None):
