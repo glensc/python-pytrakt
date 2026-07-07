@@ -167,11 +167,23 @@ def test_watched_movies_pagination():
 def test_watched_movies_pagination_validation():
     sean = User('sean')
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match='page must be a positive integer'):
         sean.get_watched_movies(page=0)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match='page must be a positive integer'):
+        sean.get_watched_movies(page=-1)
+
+    with pytest.raises(ValueError, match='page must be a valid integer'):
+        sean.get_watched_movies(page='invalid')
+
+    with pytest.raises(ValueError, match='limit must be a positive integer'):
         sean.get_watched_movies(limit=0)
+
+    with pytest.raises(ValueError, match='limit must be a positive integer'):
+        sean.get_watched_movies(limit=-1)
+
+    with pytest.raises(ValueError, match='limit must be a valid integer'):
+        sean.get_watched_movies(limit='invalid')
 
 
 def test_stats():

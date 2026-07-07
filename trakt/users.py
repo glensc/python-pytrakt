@@ -518,6 +518,18 @@ class User:
             watched_movies.append(Movie(**movie_data))
         return watched_movies
 
+    @staticmethod
+    def _pagination_param(name, value):
+        try:
+            value = int(value)
+        except (TypeError, ValueError):
+            raise ValueError(f'{name} must be a valid integer')
+
+        if value < 1:
+            raise ValueError(f'{name} must be a positive integer')
+
+        return value
+
     @get
     def get_watched_movies(self, page=None, limit=None):
         """Watched progress for all :class:`Movie`'s in this :class:`User`'s
@@ -526,15 +538,9 @@ class User:
         uri = 'users/{user}/watched/movies'.format(user=slugify(self.username))
         params = {}
         if page is not None:
-            page = int(page)
-            if page < 1:
-                raise ValueError('page must be a positive integer')
-            params['page'] = page
+            params['page'] = self._pagination_param('page', page)
         if limit is not None:
-            limit = int(limit)
-            if limit < 1:
-                raise ValueError('limit must be a positive integer')
-            params['limit'] = limit
+            params['limit'] = self._pagination_param('limit', limit)
         if params:
             uri += '?' + urlencode(params)
 
