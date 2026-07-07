@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from copy import deepcopy
+from urllib.parse import parse_qs, urlsplit
 
 import pytest
 import trakt
@@ -137,10 +138,14 @@ def test_watched_movies_pagination():
 
     def request(method, uri, data=None):
         request_calls.append((method, uri, data))
-        if uri in ('users/sean/watched/movies?page=2&limit=1',
-                   'users/sean/watched/movies?limit=1'):
+        if uri.startswith('users/sean/watched/movies?'):
+            query = parse_qs(urlsplit(f'https://api.trakt.tv/{uri}').query)
+            if query.get('limit') == ['1']:
+                response = original_request('GET', 'users/sean/watched/movies')
+                return deepcopy(response[:1])
+        if uri == 'users/sean/watched/movies':
             response = original_request('GET', 'users/sean/watched/movies')
-            return deepcopy(response[:1])
+            return deepcopy(response)
         return original_request(method, uri, data)
 
     client.request = request

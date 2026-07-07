@@ -532,15 +532,15 @@ class User:
 
     @get
     def get_watched_movies(self, page=None, limit=None):
-        """Watched progress for all :class:`Movie`'s in this :class:`User`'s
-        collection.
+        """Watched progress for all :class:`Movie` objects for this
+        :class:`User`.
         """
         uri = 'users/{user}/watched/movies'.format(user=slugify(self.username))
         params = {}
         if page is not None:
-            params['page'] = self._pagination_param('page', page)
+            params['page'] = User._pagination_param('page', page)
         if limit is not None:
-            params['limit'] = self._pagination_param('limit', limit)
+            params['limit'] = User._pagination_param('limit', limit)
         if params:
             uri += '?' + urlencode(params)
 
@@ -550,8 +550,8 @@ class User:
     @property
     @get
     def watched_movies(self):
-        """Watched progress for all :class:`Movie`'s in this :class:`User`'s
-        collection.
+        """Watched progress for all :class:`Movie` objects for this
+        :class:`User`.
         """
         if self._watched_movies is None:
             data = yield 'users/{user}/watched/movies'.format(
