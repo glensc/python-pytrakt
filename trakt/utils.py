@@ -4,7 +4,8 @@ import unicodedata
 from datetime import datetime, timezone
 
 __author__ = 'Jon Nappi'
-__all__ = ['slugify', 'airs_date', 'now', 'timestamp', 'extract_ids']
+__all__ = ['slugify', 'airs_date', 'now', 'timestamp', 'extract_ids',
+           'validate_pagination_param']
 
 
 def slugify(value):
@@ -56,3 +57,22 @@ def extract_ids(id_dict):
     """
     id_dict.update(id_dict.pop('ids', {}))
     return id_dict
+
+
+def validate_pagination_param(name, value):
+    """Validate and coerce a pagination parameter (page or limit) to a positive integer.
+
+    :param name: Parameter name used in error messages
+    :param value: Value to validate
+    :return: The validated integer value
+    :raises ValueError: If the value is not a valid positive integer
+    """
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        raise ValueError(f'{name} must be a valid integer')
+
+    if value < 1:
+        raise ValueError(f'{name} must be a positive integer')
+
+    return value

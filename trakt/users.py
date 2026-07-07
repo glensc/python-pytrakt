@@ -10,7 +10,7 @@ from trakt.mixins import DataClassMixin, IdsMixin
 from trakt.movies import Movie
 from trakt.people import Person
 from trakt.tv import TVEpisode, TVSeason, TVShow
-from trakt.utils import slugify
+from trakt.utils import slugify, validate_pagination_param
 
 __author__ = 'Jon Nappi'
 __all__ = ['User', 'UserList', 'PublicList', 'Request', 'follow', 'get_all_requests',
@@ -518,18 +518,6 @@ class User:
             watched_movies.append(Movie(**movie_data))
         return watched_movies
 
-    @staticmethod
-    def _pagination_param(name, value):
-        try:
-            value = int(value)
-        except (TypeError, ValueError):
-            raise ValueError(f'{name} must be a valid integer')
-
-        if value < 1:
-            raise ValueError(f'{name} must be a positive integer')
-
-        return value
-
     @get
     def get_watched_movies(self, page=None, limit=None):
         """Watched progress for all :class:`Movie` objects for this
@@ -538,9 +526,9 @@ class User:
         uri = 'users/{user}/watched/movies'.format(user=slugify(self.username))
         params = {}
         if page is not None:
-            params['page'] = User._pagination_param('page', page)
+            params['page'] = validate_pagination_param('page', page)
         if limit is not None:
-            params['limit'] = User._pagination_param('limit', limit)
+            params['limit'] = validate_pagination_param('limit', limit)
         if params:
             uri += '?' + urlencode(params)
 
