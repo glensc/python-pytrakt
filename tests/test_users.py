@@ -191,6 +191,40 @@ def test_watched_movies_pagination_validation():
         sean.get_watched_movies(limit='invalid')
 
 
+def test_watched_movies_auto_pagination():
+    """watched_movies should automatically fetch all pages when the API
+    returns X-Pagination-Page-Count > 1."""
+    sean = User('sean')
+    client = trakt.core.api()
+    original_request = client.request
+    original_headers = client._last_response_headers
+    request_calls = []
+
+    def request(method, uri, data=None):
+        request_calls.append((method, uri, data))
+        all_movies = original_request('GET', 'users/sean/watched/movies')
+        if uri == 'users/sean/watched/movies':
+            client._last_response_headers = {'X-Pagination-Page-Count': '2'}
+            return deepcopy(all_movies[:1])
+        if uri == 'users/sean/watched/movies?page=2':
+            client._last_response_headers = {'X-Pagination-Page-Count': '2'}
+            return deepcopy(all_movies[1:])
+        return original_request(method, uri, data)
+
+    client.request = request
+    client._last_response_headers = {}
+    try:
+        movies = sean.watched_movies
+        assert len(movies) == 2
+        assert len(request_calls) == 2
+        assert request_calls[0] == ('get', 'users/sean/watched/movies', None)
+        assert request_calls[1] == ('get', 'users/sean/watched/movies?page=2', None)
+        assert all([isinstance(m, Movie) for m in movies])
+    finally:
+        client.request = original_request
+        client._last_response_headers = original_headers
+
+
 def test_stats():
     sean = User('sean')
     assert isinstance(sean.get_stats(), dict)

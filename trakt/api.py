@@ -38,6 +38,12 @@ class HttpClient:
         self.base_url = base_url
         self.session = session
         self.timeout = timeout or TIMEOUT
+        self._last_response_headers = {}
+
+    @property
+    def last_response_headers(self):
+        """Headers from the most recent HTTP response, including pagination headers."""
+        return self._last_response_headers
 
     def get(self, url: str):
         """
@@ -130,6 +136,7 @@ class HttpClient:
         else:
             response = self.session.request(method, url, headers=self.headers, auth=self.auth, timeout=self.timeout, data=json.dumps(data))
         self.logger.debug('RESPONSE [%s] (%s): %s', method, url, str(response))
+        self._last_response_headers = dict(response.headers)
         if response.status_code == 204:  # HTTP no content
             return None
         self.raise_if_needed(response)
