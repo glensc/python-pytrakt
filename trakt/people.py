@@ -4,7 +4,7 @@
 from trakt.core import get
 from trakt.mixins import IdsMixin
 from trakt.sync import search
-from trakt.utils import slugify
+from trakt.utils import build_uri, slugify
 
 __author__ = 'Jon Nappi'
 __all__ = ['Person', 'ActingCredit', 'CrewCredit', 'Credits', 'MovieCredits',
@@ -40,15 +40,15 @@ class Person(IdsMixin):
 
     @property
     def ext(self):
-        return 'people/{id}'.format(id=self.slug)
+        return build_uri('people/{id}', id=self.slug)
 
     @property
     def ext_full(self):
-        return self.ext + '?extended=full'
+        return build_uri(self.ext, extended='full')
 
     @property
     def images_ext(self):
-        return self.ext + '?extended=images'
+        return build_uri(self.ext, extended='images')
 
     @property
     def ext_movie_credits(self):
