@@ -83,3 +83,14 @@ def test_build_uri_pagination_validation():
 
     with raises(ValueError, match='limit must be a valid integer'):
         build_uri('shows/popular', limit='invalid')
+
+
+def test_validate_pagination_param_rejects_bools_and_fractional_floats():
+    """verify pagination validation rejects values that should not coerce"""
+    from pytest import raises
+
+    with raises(ValueError, match='page must be a valid integer'):
+        build_uri('shows/popular', page=True)
+
+    with raises(ValueError, match='limit must be a valid integer'):
+        build_uri('shows/popular', limit=1.5)
