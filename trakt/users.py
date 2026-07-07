@@ -509,22 +509,39 @@ class User:
                 self._show_collection.append(show)
         yield self._show_collection
 
-    @property
+    def _build_watched_movies(self, data):
+        """Parse raw API response data into a list of :class:`Movie` objects.
+
+        :param data: List of raw movie dicts from the Trakt API
+        :return: List of :class:`Movie` instances
+        """
+        watched_movies = []
+        for movie in data:
+            movie_data = movie.pop('movie')
+            movie_data.update(movie)
+            watched_movies.append(Movie(**movie_data))
+        return watched_movies
+
     @get
+    def get_watched_movies(self):
+        """Watched progress for all :class:`Movie` objects for this
+        :class:`User`.
+
+        :return: List of :class:`Movie` instances
+        """
+        data = yield 'users/{user}/watched/movies'.format(
+            user=slugify(self.username)
+        )
+        yield self._build_watched_movies(data)
+
+    @property
     def watched_movies(self):
         """Watched progress for all :class:`Movie`'s in this :class:`User`'s
         collection.
         """
         if self._watched_movies is None:
-            data = yield 'users/{user}/watched/movies'.format(
-                user=slugify(self.username)
-            )
-            self._watched_movies = []
-            for movie in data:
-                movie_data = movie.pop('movie')
-                movie_data.update(movie)
-                self._watched_movies.append(Movie(**movie_data))
-        yield self._watched_movies
+            self._watched_movies = self.get_watched_movies()
+        return self._watched_movies
 
     @property
     @get
