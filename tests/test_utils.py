@@ -2,7 +2,8 @@
 """unit tests for the trakt.utils module"""
 from datetime import datetime
 
-from trakt.utils import airs_date, extract_ids, now, slugify, timestamp
+from trakt.utils import (airs_date, build_uri, extract_ids, now, slugify,
+                         timestamp)
 
 
 def test_slugify():
@@ -61,3 +62,24 @@ def test_extract_ids():
     input_dict = {'ids': ids}
     result = extract_ids(input_dict)
     assert result == ids
+
+
+def test_build_uri():
+    """verify that uri query params are appended correctly"""
+    assert build_uri('users/{user}/watched/movies', user='sean') == \
+        'users/sean/watched/movies'
+    assert build_uri('shows/popular', page=2, limit=10) == \
+        'shows/popular?page=2&limit=10'
+    assert build_uri('shows/popular?extended={extended}', extended='full',
+                     page=2) == 'shows/popular?extended=full&page=2'
+
+
+def test_build_uri_pagination_validation():
+    """verify that pagination params are validated by the helper"""
+    from pytest import raises
+
+    with raises(ValueError, match='page must be a positive integer'):
+        build_uri('shows/popular', page=0)
+
+    with raises(ValueError, match='limit must be a valid integer'):
+        build_uri('shows/popular', limit='invalid')
