@@ -522,6 +522,18 @@ class User:
             watched_movies.append(Movie(**movie_data))
         return watched_movies
 
+    @get
+    def get_watched_movies(self):
+        """Watched progress for all :class:`Movie` objects for this
+        :class:`User`.
+
+        :return: List of :class:`Movie` instances
+        """
+        data = yield 'users/{user}/watched/movies'.format(
+            user=slugify(self.username)
+        )
+        yield self._build_watched_movies(data)
+
     @property
     @get
     def watched_movies(self):
