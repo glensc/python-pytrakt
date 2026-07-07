@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
+
 from trakt.movies import Movie
 from trakt.people import Person
 from trakt.tv import TVEpisode, TVSeason, TVShow
