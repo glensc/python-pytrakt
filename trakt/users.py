@@ -4,7 +4,7 @@
 from dataclasses import dataclass, fields
 from typing import Any, NamedTuple, Optional, Union
 
-from trakt.core import delete, get, post
+from trakt.core import api, delete, get, post
 from trakt.mixins import DataClassMixin, IdsMixin
 from trakt.movies import Movie
 from trakt.people import Person
@@ -545,10 +545,15 @@ class User:
     @property
     def watched_movies(self):
         """Watched progress for all :class:`Movie`'s in this :class:`User`'s
-        collection.
+        collection. Automatically fetches all pages.
         """
         if self._watched_movies is None:
-            self._watched_movies = self.get_watched_movies()
+            client = api()
+            all_movies = client.paginate(
+                'users/{user}/watched/movies',
+                user=slugify(self.username),
+            )
+            self._watched_movies = self._build_watched_movies(all_movies or [])
         return self._watched_movies
 
     @property
