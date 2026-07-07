@@ -143,7 +143,7 @@ def test_watched_movies_pagination():
 
     client.request = request
     try:
-        watched_movies = User.watched_movies.fget(sean, page=2, limit=1)
+        watched_movies = sean.get_watched_movies(page=2, limit=1)
         assert request_calls[-1] == ('get',
                                      'users/sean/watched/movies'
                                      '?page=2&limit=1',
