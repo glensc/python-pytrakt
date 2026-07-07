@@ -66,7 +66,16 @@ def _validate_pagination_param(name, value):
     :return: The validated integer value.
     :raises ValueError: If value is not a valid positive integer.
     """
+
     try:
+        # bool is a subclass of int; reject it explicitly to avoid accepting True/False.
+        if isinstance(value, bool):
+            raise ValueError
+
+        # Avoid silently truncating noninteger floats (e.g., 1.9 -> 1).
+        if isinstance(value, float) and not value.is_integer():
+            raise ValueError
+
         value = int(value)
     except (TypeError, ValueError):
         raise ValueError(f'{name} must be a valid integer')
