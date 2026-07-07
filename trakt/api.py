@@ -12,6 +12,7 @@ from trakt.config import AuthConfig
 from trakt.core import TIMEOUT
 from trakt.errors import (BadRequestException, BadResponseException,
                           OAuthException, OAuthRefreshException)
+from trakt.utils import build_uri
 
 __author__ = 'Elan Ruusamäe'
 
@@ -39,20 +40,23 @@ class HttpClient:
         self.session = session
         self.timeout = timeout or TIMEOUT
 
-    def get(self, url: str):
+    def get(self, url: str, include_headers=False):
         """
         Send a GET request to the specified URL.
 
         Parameters:
             url (str): The endpoint URL to send the GET request to.
+            include_headers (bool): When true, return a ``(response, headers)``
+                tuple instead of just the decoded JSON body.
 
         Returns:
-            dict: The JSON-decoded response from the server.
+            dict or tuple: The JSON-decoded response from the server, or a
+            ``(response, headers)`` tuple when ``include_headers`` is true.
 
         Raises:
             Various exceptions from `raise_if_needed` based on HTTP status codes.
         """
-        return self.request('get', url)
+        return self.request('get', url, include_headers=include_headers)
 
     def delete(self, url: str):
         self.request('delete', url)
@@ -76,6 +80,35 @@ class HttpClient:
         """
         return self.request('put', url, data=data)
 
+    def iter_pages(self, url, **params):
+        """Yield successive pages for a paginated GET endpoint."""
+        page = 1
+        while True:
+            page_url = build_uri(url, **params) if page == 1 else build_uri(
+                url, page=page, **params
+            )
+            page_data, headers = self.get(page_url, include_headers=True)
+            yield page_data
+            try:
+                page_count = int(headers.get('X-Pagination-Page-Count', 1))
+            except (TypeError, ValueError):
+                page_count = 1
+            if page >= page_count:
+                break
+            page += 1
+
+    def paginate(self, url, **params):
+        """Return a flattened list from all pages of a paginated GET endpoint."""
+        results = []
+        for page_data in self.iter_pages(url, **params):
+            if page_data is None:
+                continue
+            if isinstance(page_data, list):
+                results.extend(page_data)
+            else:
+                results.append(page_data)
+        return results
+
     @property
     def auth(self):
         """
@@ -96,7 +129,7 @@ class HttpClient:
         """
         self._auth = auth
 
-    def request(self, method, url, data=None):
+    def request(self, method, url, data=None, include_headers=False):
         """
         Send an HTTP request to the Trakt API and process the response.
 
@@ -109,7 +142,9 @@ class HttpClient:
             data (dict, optional): Payload to send with the request. Defaults to None.
 
         Returns:
-            dict or None: Decoded JSON response from the Trakt API, or None for 204 No Content responses
+            dict or tuple or None: Decoded JSON response from the Trakt API,
+            ``(response, headers)`` when ``include_headers`` is true, or None
+            for 204 No Content responses.
 
         Raises:
             TraktException: If the API returns a non-200 status code
@@ -130,11 +165,16 @@ class HttpClient:
         else:
             response = self.session.request(method, url, headers=self.headers, auth=self.auth, timeout=self.timeout, data=json.dumps(data))
         self.logger.debug('RESPONSE [%s] (%s): %s', method, url, str(response))
+        headers = response.headers.copy()
         if response.status_code == 204:  # HTTP no content
-            return None
-        self.raise_if_needed(response)
+            body = None
+        else:
+            self.raise_if_needed(response)
+            body = self.decode_response(response)
 
-        return self.decode_response(response)
+        if include_headers:
+            return body, headers
+        return body
 
     @staticmethod
     def decode_response(response):
