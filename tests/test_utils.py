@@ -70,8 +70,12 @@ def test_build_uri():
         'users/sean/watched/movies'
     assert build_uri('shows/popular', page=2, limit=10) == \
         'shows/popular?page=2&limit=10'
-    assert build_uri('shows/popular?extended={extended}', extended='full',
-                     page=2) == 'shows/popular?extended=full&page=2'
+    assert build_uri('shows/popular', extended='full') == \
+        'shows/popular?extended=full'
+    assert build_uri('shows/popular', page=2, extended='full') == \
+        'shows/popular?page=2&extended=full'
+    assert build_uri('shows/popular?sort=rank', page=2) == \
+        'shows/popular?sort=rank&page=2'
 
 
 def test_build_uri_pagination_validation():

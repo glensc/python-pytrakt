@@ -88,12 +88,13 @@ def _validate_pagination_param(name, value):
     return value
 
 
-def build_uri(uri, page=None, limit=None, **params):
+def build_uri(uri, page=None, limit=None, extended=None, **params):
     """Format *uri* and append pagination query parameters.
 
     ``page`` and ``limit`` are validated as positive integers and become query
     parameters. Remaining keyword arguments are applied via ``str.format`` on
-    *uri*; any ``None`` values are dropped before formatting (so a missing
+    *uri*; ``extended`` is appended as a query parameter when provided.
+    Any ``None`` values are dropped before formatting (so a missing
     placeholder will raise ``KeyError``).
     """
     params = {key: value for key, value in params.items() if value is not None}
@@ -104,6 +105,8 @@ def build_uri(uri, page=None, limit=None, **params):
         query.append(('page', _validate_pagination_param('page', page)))
     if limit is not None:
         query.append(('limit', _validate_pagination_param('limit', limit)))
+    if extended:
+        query.append(('extended', extended))
 
     if query:
         uri += ('&' if '?' in uri else '?') + urlencode(query)

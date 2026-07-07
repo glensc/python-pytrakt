@@ -10,7 +10,7 @@ from deprecated import deprecated
 
 from trakt.core import delete, get, post
 from trakt.mixins import IdsMixin
-from trakt.utils import slugify, timestamp
+from trakt.utils import build_uri, slugify, timestamp
 
 __author__ = 'Jon Nappi'
 __all__ = ['Scrobbler', 'comment', 'rate', 'add_to_history', 'get_collection',
@@ -469,12 +469,10 @@ def get_watched(list_type=None, extended=None):
     if list_type and list_type not in valid_type:
         raise ValueError('list_type must be one of {}'.format(valid_type))
 
-    uri = 'sync/watched'
-    if list_type:
-        uri += '/{}'.format(list_type)
-
-    if list_type == 'shows' and extended:
-        uri += '?extended={extended}'.format(extended=extended)
+    uri = (build_uri('sync/watched/{list_type}', list_type=list_type)
+           if list_type else 'sync/watched')
+    if list_type == 'shows':
+        uri = build_uri(uri, extended=extended)
 
     data = yield uri
     results = []
@@ -508,12 +506,9 @@ def get_collection(list_type=None, extended=None):
     if list_type and list_type not in valid_type:
         raise ValueError('list_type must be one of {}'.format(valid_type))
 
-    uri = 'sync/collection'
-    if list_type:
-        uri += '/{}'.format(list_type)
-
-    if extended:
-        uri += '?extended={extended}'.format(extended=extended)
+    uri = (build_uri('sync/collection/{list_type}', list_type=list_type)
+           if list_type else 'sync/collection')
+    uri = build_uri(uri, extended=extended)
 
     data = yield uri
     results = []

@@ -10,7 +10,7 @@ from trakt.sync import (Scrobbler, add_to_collection, add_to_history,
                         add_to_watchlist, checkin_media, comment,
                         delete_checkin, rate, remove_from_collection,
                         remove_from_history, remove_from_watchlist, search)
-from trakt.utils import now, slugify
+from trakt.utils import build_uri, now, slugify
 
 __author__ = 'Jon Nappi'
 __all__ = ['dismiss_recommendation', 'get_recommended_movies', 'genres',
@@ -144,17 +144,17 @@ class Movie(IdsMixin):
     @property
     def ext(self):
         """Base uri to retrieve basic information about this :class:`Movie`"""
-        return 'movies/{slug}'.format(slug=self.slug)
+        return build_uri('movies/{slug}', slug=self.slug)
 
     @property
     def ext_full(self):
         """Uri to retrieve all information about this :class:`Movie`"""
-        return self.ext + '?extended=full'
+        return build_uri(self.ext, extended='full')
 
     @property
     def images_ext(self):
         """Uri to retrieve additional image information"""
-        return self.ext + '?extended=images'
+        return build_uri(self.ext, extended='images')
 
     @property
     @get

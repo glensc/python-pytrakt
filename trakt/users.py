@@ -475,8 +475,9 @@ class User:
         Protected users won't return any data unless you are friends.
         """
         if self._movie_collection is None:
-            ext = 'users/{username}/collection/movies?extended=metadata'
-            data = yield ext.format(username=slugify(self.username))
+            data = yield build_uri('users/{username}/collection/movies',
+                                   username=slugify(self.username),
+                                   extended='metadata')
             self._movie_collection = []
             for movie in data:
                 mov = movie.pop('movie')
@@ -491,8 +492,9 @@ class User:
         Protected users won't return any data unless you are friends.
         """
         if self._show_collection is None:
-            ext = 'users/{username}/collection/shows?extended=metadata'
-            data = yield ext.format(username=slugify(self.username))
+            data = yield build_uri('users/{username}/collection/shows',
+                                   username=slugify(self.username),
+                                   extended='metadata')
             self._show_collection = []
             for show_data in data:
                 show_item = show_data.pop('show')
@@ -647,8 +649,7 @@ class User:
         if list_type is not None:
             uri += f'/{list_type}'
 
-        if limit is not None:
-            uri += f'?limit={limit}'
+        uri = build_uri(uri, limit=limit)
 
         data = yield uri
         yield data
