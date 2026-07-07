@@ -541,10 +541,7 @@ class User:
         collection.
         """
         if self._watched_movies is None:
-            data = yield 'users/{user}/watched/movies'.format(
-                user=slugify(self.username)
-            )
-            self._watched_movies = self._build_watched_movies(data)
+            self._watched_movies = self.get_watched_movies()
         yield self._watched_movies
 
     @property
