@@ -535,14 +535,13 @@ class User:
         yield self._build_watched_movies(data)
 
     @property
-    @get
     def watched_movies(self):
         """Watched progress for all :class:`Movie`'s in this :class:`User`'s
         collection.
         """
         if self._watched_movies is None:
             self._watched_movies = self.get_watched_movies()
-        yield self._watched_movies
+        return self._watched_movies
 
     @property
     @get
