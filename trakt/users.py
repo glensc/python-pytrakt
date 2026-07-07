@@ -510,6 +510,14 @@ class User:
                 self._show_collection.append(show)
         yield self._show_collection
 
+    def _build_watched_movies(self, data):
+        watched_movies = []
+        for movie in data:
+            movie_data = movie.pop('movie')
+            movie_data.update(movie)
+            watched_movies.append(Movie(**movie_data))
+        return watched_movies
+
     @get
     def get_watched_movies(self, page=None, limit=None):
         """Watched progress for all :class:`Movie`'s in this :class:`User`'s
@@ -531,21 +539,20 @@ class User:
             uri += '?' + urlencode(params)
 
         data = yield uri
-        watched_movies = []
-        for movie in data:
-            movie_data = movie.pop('movie')
-            movie_data.update(movie)
-            watched_movies.append(Movie(**movie_data))
-        yield watched_movies
+        yield self._build_watched_movies(data)
 
     @property
+    @get
     def watched_movies(self):
         """Watched progress for all :class:`Movie`'s in this :class:`User`'s
         collection.
         """
         if self._watched_movies is None:
-            self._watched_movies = self.get_watched_movies()
-        return self._watched_movies
+            data = yield 'users/{user}/watched/movies'.format(
+                user=slugify(self.username)
+            )
+            self._watched_movies = self._build_watched_movies(data)
+        yield self._watched_movies
 
     @property
     @get

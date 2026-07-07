@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from copy import deepcopy
 
+import pytest
 import trakt
 from trakt.movies import Movie
 from trakt.people import Person
@@ -136,7 +137,8 @@ def test_watched_movies_pagination():
 
     def request(method, uri, data=None):
         request_calls.append((method, uri, data))
-        if uri == 'users/sean/watched/movies?page=2&limit=1':
+        if uri in ('users/sean/watched/movies?page=2&limit=1',
+                   'users/sean/watched/movies?limit=1'):
             response = original_request('GET', 'users/sean/watched/movies')
             return deepcopy(response[:1])
         return original_request(method, uri, data)
@@ -149,11 +151,27 @@ def test_watched_movies_pagination():
         assert len(watched_movies) == 1
         assert all([isinstance(movie, Movie) for movie in watched_movies])
 
+        watched_movies = sean.get_watched_movies(limit=1)
+        assert request_calls[-1] == ('get', 'users/sean/watched/movies?limit=1',
+                                     None)
+        assert len(watched_movies) == 1
+        assert all([isinstance(movie, Movie) for movie in watched_movies])
+
         watched_movies = sean.watched_movies
         assert request_calls[-1] == ('get', 'users/sean/watched/movies', None)
         assert all([isinstance(movie, Movie) for movie in watched_movies])
     finally:
         client.request = original_request
+
+
+def test_watched_movies_pagination_validation():
+    sean = User('sean')
+
+    with pytest.raises(ValueError):
+        sean.get_watched_movies(page=0)
+
+    with pytest.raises(ValueError):
+        sean.get_watched_movies(limit=0)
 
 
 def test_stats():
