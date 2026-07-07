@@ -143,11 +143,9 @@ def test_watched_movies_pagination():
 
     client.request = request
     try:
+        expected_uri = 'users/sean/watched/movies?page=2&limit=1'
         watched_movies = sean.get_watched_movies(page=2, limit=1)
-        assert request_calls[-1] == ('get',
-                                     'users/sean/watched/movies'
-                                     '?page=2&limit=1',
-                                     None)
+        assert request_calls[-1] == ('get', expected_uri, None)
         assert len(watched_movies) == 1
         assert all([isinstance(movie, Movie) for movie in watched_movies])
 
