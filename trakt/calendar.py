@@ -6,7 +6,7 @@ from pprint import pformat
 from trakt.core import get
 from trakt.movies import Movie
 from trakt.tv import TVEpisode, TVShow
-from trakt.utils import airs_date, now
+from trakt.utils import airs_date, build_uri, now
 
 __author__ = 'Jon Nappi'
 __all__ = ['Calendar', 'PremiereCalendar', 'MyPremiereCalendar',
@@ -57,10 +57,8 @@ class Calendar:
     @property
     def ext(self):
         """construct the fully formatted url for this Calendar"""
-        uri = '/'.join([self.url, str(self.date), str(self.days)])
-        if self.extended:
-            uri += '?extended={extended}'.format(extended=self.extended)
-        return uri
+        return build_uri('{url}/{date}/{days}', url=self.url, date=self.date,
+                         days=self.days, extended=self.extended)
 
     @get
     def _get(self):
