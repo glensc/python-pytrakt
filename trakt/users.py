@@ -543,10 +543,7 @@ class User:
         if self._watched_movies is None:
             from trakt.core import api
             client = api()
-            base_uri = 'users/{user}/watched/movies'.format(
-                user=slugify(self.username)
-            )
-            all_data = list(client.get(base_uri) or [])
+            all_movies = self.get_watched_movies() or []
             try:
                 page_count = int(
                     client.last_response_headers.get('X-Pagination-Page-Count', 1)
@@ -554,12 +551,10 @@ class User:
             except (ValueError, TypeError):
                 page_count = 1
             for page in range(2, page_count + 1):
-                page_data = client.get(
-                    '{uri}?{query}'.format(uri=base_uri, query=urlencode({'page': page}))
-                )
-                if page_data:
-                    all_data.extend(page_data)
-            self._watched_movies = self._build_watched_movies(all_data)
+                page_movies = self.get_watched_movies(page=page)
+                if page_movies:
+                    all_movies.extend(page_movies)
+            self._watched_movies = all_movies
         return self._watched_movies
 
     @property
