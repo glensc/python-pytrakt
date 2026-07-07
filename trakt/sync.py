@@ -6,8 +6,6 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
 
-from deprecated import deprecated
-
 from trakt.core import delete, get, post
 from trakt.mixins import IdsMixin
 from trakt.utils import build_uri, slugify, timestamp
