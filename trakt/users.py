@@ -3,6 +3,7 @@
 
 from dataclasses import dataclass, fields
 from typing import Any, NamedTuple, Optional, Union
+from urllib.parse import urlencode
 
 from trakt.core import delete, get, post
 from trakt.mixins import DataClassMixin, IdsMixin
@@ -515,13 +516,19 @@ class User:
         collection.
         """
         uri = 'users/{user}/watched/movies'.format(user=slugify(self.username))
-        params = []
+        params = {}
         if page is not None:
-            params.append(f'page={page}')
+            page = int(page)
+            if page < 1:
+                raise ValueError('page must be a positive integer')
+            params['page'] = page
         if limit is not None:
-            params.append(f'limit={limit}')
+            limit = int(limit)
+            if limit < 1:
+                raise ValueError('limit must be a positive integer')
+            params['limit'] = limit
         if params:
-            uri += f'?{"&".join(params)}'
+            uri += '?' + urlencode(params)
 
         data = yield uri
         watched_movies = []
