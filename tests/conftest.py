@@ -33,7 +33,7 @@ class MockCore:
             with open(mock_file, encoding='utf-8') as f:
                 self.mock_data.update(json.load(f))
 
-    def request(self, method, uri, data=None):
+    def request(self, method, uri, data=None, include_headers=False):
         if uri.startswith('/'):
             uri = uri[1:]
         # use a deepcopy of the mocked data to ensure clean responses on every
@@ -42,7 +42,10 @@ class MockCore:
         response = method_responses.get(method.upper())
         if response is None:
             print(f"No mock for {uri}")
-        return deepcopy(response)
+        response = deepcopy(response)
+        if include_headers:
+            return response, {}
+        return response
 
 
 trakt.core.CLIENT_ID = 'FOO'
