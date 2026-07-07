@@ -96,7 +96,7 @@ class HttpClient:
         """
         self._auth = auth
 
-    def request(self, method, url, data=None):
+    def request(self, method, url, data=None, include_headers=False):
         """
         Send an HTTP request to the Trakt API and process the response.
 
@@ -109,7 +109,9 @@ class HttpClient:
             data (dict, optional): Payload to send with the request. Defaults to None.
 
         Returns:
-            dict or None: Decoded JSON response from the Trakt API, or None for 204 No Content responses
+            dict or tuple or None: Decoded JSON response from the Trakt API,
+            ``(response, headers)`` when ``include_headers`` is true, or None
+            for 204 No Content responses.
 
         Raises:
             TraktException: If the API returns a non-200 status code
@@ -130,11 +132,16 @@ class HttpClient:
         else:
             response = self.session.request(method, url, headers=self.headers, auth=self.auth, timeout=self.timeout, data=json.dumps(data))
         self.logger.debug('RESPONSE [%s] (%s): %s', method, url, str(response))
+        headers = response.headers.copy()
         if response.status_code == 204:  # HTTP no content
-            return None
-        self.raise_if_needed(response)
+            body = None
+        else:
+            self.raise_if_needed(response)
+            body = self.decode_response(response)
 
-        return self.decode_response(response)
+        if include_headers:
+            return body, headers
+        return body
 
     @staticmethod
     def decode_response(response):
