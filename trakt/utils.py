@@ -3,7 +3,7 @@ import re
 import unicodedata
 from datetime import datetime, timezone
 
-__author__ = 'Jon Nappi'
+__author__ = 'Jon Nappi, Elan Ruusamäe'
 __all__ = ['slugify', 'airs_date', 'now', 'timestamp', 'extract_ids']
 
 
