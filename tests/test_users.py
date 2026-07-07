@@ -125,6 +125,13 @@ def test_watched():
         assert all([isinstance(s, TVShow) for s in sean.watched_shows])
 
 
+def test_get_watched_movies():
+    sean = User('sean')
+    watched_movies = sean.get_watched_movies()
+    assert isinstance(watched_movies, list)
+    assert all([isinstance(m, Movie) for m in watched_movies])
+
+
 def test_stats():
     sean = User('sean')
     assert isinstance(sean.get_stats(), dict)
