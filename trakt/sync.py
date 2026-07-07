@@ -6,8 +6,6 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
 
-from deprecated import deprecated
-
 from trakt.core import delete, get, post
 from trakt.mixins import IdsMixin
 from trakt.utils import build_uri, slugify, timestamp
@@ -454,8 +452,6 @@ def get_watchlist(list_type=None, sort=None):
     yield results
 
 
-@deprecated("This method returns watchlist, not watched list. "
-            "This will be fixed in PyTrakt 4.x to return watched list")
 @get
 def get_watched(list_type=None, extended=None):
     """Return all movies or shows a user has watched sorted by most plays.
