@@ -511,20 +511,36 @@ class User:
 
     @property
     @get
-    def watched_movies(self):
+    def watched_movies(self, page=None, limit=None):
         """Watched progress for all :class:`Movie`'s in this :class:`User`'s
         collection.
         """
-        if self._watched_movies is None:
-            data = yield 'users/{user}/watched/movies'.format(
-                user=slugify(self.username)
-            )
-            self._watched_movies = []
-            for movie in data:
-                movie_data = movie.pop('movie')
-                movie_data.update(movie)
-                self._watched_movies.append(Movie(**movie_data))
-        yield self._watched_movies
+        if page is None and limit is None and self._watched_movies is not None:
+            yield self._watched_movies
+            return
+
+        uri = 'users/{user}/watched/movies'.format(user=slugify(self.username))
+        params = []
+        if page is not None:
+            params.append(f'page={page}')
+        if limit is not None:
+            params.append(f'limit={limit}')
+        if params:
+            uri += f'?{"&".join(params)}'
+
+        data = yield uri
+        watched_movies = []
+        for movie in data:
+            movie_data = movie.pop('movie')
+            movie_data.update(movie)
+            watched_movies.append(Movie(**movie_data))
+
+        if page is None and limit is None:
+            self._watched_movies = watched_movies
+            yield self._watched_movies
+            return
+
+        yield watched_movies
 
     @property
     @get

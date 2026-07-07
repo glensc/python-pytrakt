@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from copy import deepcopy
+
+import trakt
 from trakt.movies import Movie
 from trakt.people import Person
 from trakt.tv import TVEpisode, TVSeason, TVShow
@@ -123,6 +126,36 @@ def test_watched():
     for _ in range(2):
         assert all([isinstance(m, Movie) for m in sean.watched_movies])
         assert all([isinstance(s, TVShow) for s in sean.watched_shows])
+
+
+def test_watched_movies_pagination():
+    sean = User('sean')
+    client = trakt.core.api()
+    request_calls = []
+    original_request = client.request
+
+    def request(method, uri, data=None):
+        request_calls.append((method, uri, data))
+        if uri == 'users/sean/watched/movies?page=2&limit=1':
+            response = original_request('GET', 'users/sean/watched/movies')
+            return deepcopy(response[:1])
+        return original_request(method, uri, data)
+
+    client.request = request
+    try:
+        watched_movies = User.watched_movies.fget(sean, page=2, limit=1)
+        assert request_calls[-1] == ('get',
+                                     'users/sean/watched/movies'
+                                     '?page=2&limit=1',
+                                     None)
+        assert len(watched_movies) == 1
+        assert all([isinstance(movie, Movie) for movie in watched_movies])
+
+        watched_movies = sean.watched_movies
+        assert request_calls[-1] == ('get', 'users/sean/watched/movies', None)
+        assert all([isinstance(movie, Movie) for movie in watched_movies])
+    finally:
+        client.request = original_request
 
 
 def test_stats():
