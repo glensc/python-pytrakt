@@ -39,20 +39,23 @@ class HttpClient:
         self.session = session
         self.timeout = timeout or TIMEOUT
 
-    def get(self, url: str):
+    def get(self, url: str, include_headers=False):
         """
         Send a GET request to the specified URL.
 
         Parameters:
             url (str): The endpoint URL to send the GET request to.
+            include_headers (bool): When true, return a ``(response, headers)``
+                tuple instead of just the decoded JSON body.
 
         Returns:
-            dict: The JSON-decoded response from the server.
+            dict or tuple: The JSON-decoded response from the server, or a
+            ``(response, headers)`` tuple when ``include_headers`` is true.
 
         Raises:
             Various exceptions from `raise_if_needed` based on HTTP status codes.
         """
-        return self.request('get', url)
+        return self.request('get', url, include_headers=include_headers)
 
     def delete(self, url: str):
         self.request('delete', url)
