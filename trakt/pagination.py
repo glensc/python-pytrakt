@@ -16,6 +16,7 @@ def page_count(headers):
 
 def iter_pages(client, url: str, **params):
     """Yield successive pages for a paginated GET endpoint."""
+    params.pop('page', None)
     page = 1
     while True:
         page_url = build_uri(url, **params) if page == 1 else build_uri(
