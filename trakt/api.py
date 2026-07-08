@@ -7,7 +7,7 @@ from json import JSONDecodeError
 from requests import Session
 from requests.auth import AuthBase
 
-from trakt import errors, pagination
+from trakt import errors
 from trakt.config import AuthConfig
 from trakt.core import TIMEOUT
 from trakt.errors import (BadRequestException, BadResponseException,
@@ -78,10 +78,6 @@ class HttpClient:
             Various exceptions from `raise_if_needed` based on HTTP response status.
         """
         return self.request('put', url, data=data)
-
-    def paginate(self, url, **params):
-        """Return a flattened list from all pages of a paginated GET endpoint."""
-        return pagination.paginate(url, api=self, **params)
 
     @property
     def auth(self):

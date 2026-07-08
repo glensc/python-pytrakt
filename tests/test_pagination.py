@@ -1,5 +1,4 @@
 from trakt.pagination import paginate
-from trakt.api import HttpClient
 
 
 class FakeClient:
@@ -72,17 +71,3 @@ def test_paginate_skips_none_extends_lists_and_appends_objects():
     result = paginate('movies/popular', api=client)
 
     assert result == [{'title': 'Two'}, {'title': 'Three'}]
-
-
-def test_http_client_paginate_delegates(monkeypatch):
-    def fake_paginate(url, api, **params):
-        assert isinstance(api, HttpClient)
-        assert url == 'movies/popular'
-        assert params == {'limit': 2}
-        return ['ok']
-
-    monkeypatch.setattr('trakt.api.paginate', fake_paginate)
-
-    client = HttpClient('https://api.trakt.tv/', session=None)
-
-    assert client.paginate('movies/popular', limit=2) == ['ok']
