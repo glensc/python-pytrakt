@@ -81,7 +81,7 @@ class HttpClient:
 
     def paginate(self, url, **params):
         """Return a flattened list from all pages of a paginated GET endpoint."""
-        return pagination.paginate(self, url, **params)
+        return pagination.paginate(url, api=self, **params)
 
     @property
     def auth(self):

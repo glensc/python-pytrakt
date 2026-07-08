@@ -1,5 +1,6 @@
 """Pagination helpers for Trakt API clients."""
 
+from trakt.core import api as factory
 from trakt.utils import build_uri
 
 __author__ = 'Elan Ruusamäe'
@@ -28,9 +29,10 @@ def iter_pages(client, url: str, **params):
         page += 1
 
 
-def paginate(client, url: str, **params):
+def paginate(url: str, api=None, **params):
     """Return a flattened list from all pages of a paginated GET endpoint."""
     results = []
+    client = api or factory()
     for page_data in iter_pages(client, url, **params):
         if page_data is None:
             continue
