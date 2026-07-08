@@ -12,7 +12,6 @@ from trakt.config import AuthConfig
 from trakt.core import TIMEOUT
 from trakt.errors import (BadRequestException, BadResponseException,
                           OAuthException, OAuthRefreshException)
-from trakt.utils import build_uri
 
 __author__ = 'Elan Ruusamäe'
 
@@ -79,35 +78,6 @@ class HttpClient:
             Various exceptions from `raise_if_needed` based on HTTP response status.
         """
         return self.request('put', url, data=data)
-
-    def iter_pages(self, url, **params):
-        """Yield successive pages for a paginated GET endpoint."""
-        page = 1
-        while True:
-            page_url = build_uri(url, **params) if page == 1 else build_uri(
-                url, page=page, **params
-            )
-            page_data, headers = self.get(page_url, include_headers=True)
-            yield page_data
-            try:
-                page_count = int(headers.get('X-Pagination-Page-Count', 1))
-            except (TypeError, ValueError):
-                page_count = 1
-            if page >= page_count:
-                break
-            page += 1
-
-    def paginate(self, url, **params):
-        """Return a flattened list from all pages of a paginated GET endpoint."""
-        results = []
-        for page_data in self.iter_pages(url, **params):
-            if page_data is None:
-                continue
-            if isinstance(page_data, list):
-                results.extend(page_data)
-            else:
-                results.append(page_data)
-        return results
 
     @property
     def auth(self):
