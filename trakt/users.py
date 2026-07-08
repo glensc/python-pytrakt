@@ -4,9 +4,10 @@
 from dataclasses import dataclass, fields
 from typing import Any, NamedTuple, Optional, Union
 
-from trakt.core import api, delete, get, post
+from trakt.core import delete, get, post
 from trakt.mixins import DataClassMixin, IdsMixin
 from trakt.movies import Movie
+from trakt.pagination import paginate
 from trakt.people import Person
 from trakt.tv import TVEpisode, TVSeason, TVShow
 from trakt.utils import build_uri, slugify
@@ -548,8 +549,7 @@ class User:
         collection. Automatically fetches all pages.
         """
         if self._watched_movies is None:
-            client = api()
-            all_movies = client.paginate(
+            all_movies = paginate(
                 'users/{user}/watched/movies',
                 user=slugify(self.username),
             )
