@@ -435,12 +435,11 @@ class User:
         yield self._lists
 
     @property
-    @get
     def watchlist_shows(self):
         """Returns all watchlist shows of :class:`User`.
         """
         if self._show_watchlist is None:
-            data = yield 'users/{username}/watchlist/shows'.format(
+            data = paginate('users/{username}/watchlist/shows',
                 username=slugify(self.username),
             )
             self._show_watchlist = []
@@ -448,16 +447,14 @@ class User:
                 show_data = show.pop('show')
                 show_data.update(show)
                 self._show_watchlist.append(TVShow(**show_data))
-            yield self._show_watchlist
-        yield self._show_watchlist
+        return self._show_watchlist
 
     @property
-    @get
     def watchlist_movies(self):
         """Returns all watchlist movies of :class:`User`.
         """
         if self._movie_watchlist is None:
-            data = yield 'users/{username}/watchlist/movies'.format(
+            data = paginate('users/{username}/watchlist/movies',
                 username=slugify(self.username),
             )
             self._movie_watchlist = []
@@ -465,8 +462,7 @@ class User:
                 mov = movie.pop('movie')
                 mov.update(movie)
                 self._movie_watchlist.append(Movie(**mov))
-            yield self._movie_watchlist
-        yield self._movie_watchlist
+        return self._movie_watchlist
 
     @property
     @get
@@ -512,7 +508,8 @@ class User:
                 self._show_collection.append(show)
         yield self._show_collection
 
-    def _build_watched_movies(self, data):
+    @staticmethod
+    def _build_movies(data):
         """Parse raw API response data into a list of :class:`Movie` objects.
 
         :param data: List of raw movie dicts from the Trakt API
@@ -541,7 +538,7 @@ class User:
         )
 
         data = yield uri
-        yield self._build_watched_movies(data)
+        yield self._build_movies(data)
 
     @property
     def watched_movies(self):
@@ -553,7 +550,7 @@ class User:
                 'users/{user}/watched/movies',
                 user=slugify(self.username),
             )
-            self._watched_movies = self._build_watched_movies(all_movies or [])
+            self._watched_movies = self._build_movies(all_movies or [])
         return self._watched_movies
 
     @property
