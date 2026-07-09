@@ -73,7 +73,7 @@ def test_build_uri():
     assert build_uri('shows/popular', extended='full') == \
         'shows/popular?extended=full'
     assert build_uri('shows/popular', page=2, extended='full') == \
-        'shows/popular?page=2&extended=full'
+        'shows/popular?extended=full&page=2'
     assert build_uri('shows/popular?sort=rank', page=2) == \
         'shows/popular?sort=rank&page=2'
 
