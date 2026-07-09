@@ -512,7 +512,8 @@ class User:
                 self._show_collection.append(show)
         yield self._show_collection
 
-    def _build_movies(self, data):
+    @staticmethod
+    def _build_movies(data):
         """Parse raw API response data into a list of :class:`Movie` objects.
 
         :param data: List of raw movie dicts from the Trakt API
