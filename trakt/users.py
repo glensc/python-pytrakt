@@ -457,11 +457,7 @@ class User:
             data = paginate('users/{username}/watchlist/movies',
                 username=slugify(self.username),
             )
-            self._movie_watchlist = []
-            for movie in data:
-                mov = movie.pop('movie')
-                mov.update(movie)
-                self._movie_watchlist.append(Movie(**mov))
+            self._movie_watchlist = self._build_movies(data or [])
         return self._movie_watchlist
 
     @property
