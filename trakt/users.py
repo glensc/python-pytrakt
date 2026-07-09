@@ -457,11 +457,7 @@ class User:
             data = paginate('users/{username}/watchlist/movies',
                 username=slugify(self.username),
             )
-            self._movie_watchlist = []
-            for movie in data:
-                mov = movie.pop('movie')
-                mov.update(movie)
-                self._movie_watchlist.append(Movie(**mov))
+            self._movie_watchlist = self._build_movies(data or [])
         return self._movie_watchlist
 
     @property
@@ -515,12 +511,12 @@ class User:
         :param data: List of raw movie dicts from the Trakt API
         :return: List of :class:`Movie` instances
         """
-        watched_movies = []
+        movies = []
         for movie in data:
             movie_data = movie.pop('movie')
             movie_data.update(movie)
-            watched_movies.append(Movie(**movie_data))
-        return watched_movies
+            movies.append(Movie(**movie_data))
+        return movies
 
     @get
     def get_watched_movies(self, page=None, limit=None):
