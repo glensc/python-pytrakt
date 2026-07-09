@@ -512,7 +512,7 @@ class User:
                 self._show_collection.append(show)
         yield self._show_collection
 
-    def _build_watched_movies(self, data):
+    def _build_movies(self, data):
         """Parse raw API response data into a list of :class:`Movie` objects.
 
         :param data: List of raw movie dicts from the Trakt API
@@ -541,7 +541,7 @@ class User:
         )
 
         data = yield uri
-        yield self._build_watched_movies(data)
+        yield self._build_movies(data)
 
     @property
     def watched_movies(self):
@@ -553,7 +553,7 @@ class User:
                 'users/{user}/watched/movies',
                 user=slugify(self.username),
             )
-            self._watched_movies = self._build_watched_movies(all_movies or [])
+            self._watched_movies = self._build_movies(all_movies or [])
         return self._watched_movies
 
     @property
