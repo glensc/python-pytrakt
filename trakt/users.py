@@ -435,12 +435,11 @@ class User:
         yield self._lists
 
     @property
-    @get
     def watchlist_shows(self):
         """Returns all watchlist shows of :class:`User`.
         """
         if self._show_watchlist is None:
-            data = yield 'users/{username}/watchlist/shows'.format(
+            data = paginate('users/{username}/watchlist/shows',
                 username=slugify(self.username),
             )
             self._show_watchlist = []
@@ -448,8 +447,7 @@ class User:
                 show_data = show.pop('show')
                 show_data.update(show)
                 self._show_watchlist.append(TVShow(**show_data))
-            yield self._show_watchlist
-        yield self._show_watchlist
+        return self._show_watchlist
 
     @property
     def watchlist_movies(self):
