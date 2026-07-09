@@ -136,6 +136,8 @@ class HttpClient:
             response = self.session.request(method, url, headers=self.headers, auth=self.auth, timeout=self.timeout, data=json.dumps(data))
         self.logger.debug('RESPONSE [%s] (%s): %s', method, url, str(response))
         headers = response.headers.copy()
+        if not include_headers and headers.get('X-Pagination-Page-Count', None):
+            self.logger.debug("Result is paginated, but pagination not used: [%s] (%s)", method, url)
         if response.status_code == 204:  # HTTP no content
             body = None
         else:
