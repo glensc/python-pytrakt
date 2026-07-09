@@ -101,12 +101,12 @@ def build_uri(uri, page=None, limit=None, extended=None, **params):
     uri = uri.format(**params)
 
     query = []
+    if extended:
+        query.append(('extended', extended))
     if page is not None:
         query.append(('page', _validate_pagination_param('page', page)))
     if limit is not None:
         query.append(('limit', _validate_pagination_param('limit', limit)))
-    if extended:
-        query.append(('extended', extended))
 
     if query:
         uri += ('&' if '?' in uri else '?') + urlencode(query)
