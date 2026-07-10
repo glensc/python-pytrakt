@@ -31,11 +31,12 @@ class Translation(NamedTuple):
 
 
 @delete
-def dismiss_recommendation(title=None):
+def dismiss_recommendation(title):
     """Dismiss the show matching the specified criteria from showing up in
     recommendations.
     """
-    yield 'recommendations/shows/{title}'.format(title=title)
+    uri = build_uri('recommendations/shows/{title}', title=title)
+    yield uri
 
 
 @get
@@ -493,9 +494,8 @@ class TVShow(IdsMixin):
         :return: a :const:`list` of :class:`Translation` objects
         """
         if self._translations is None:
-            data = yield self.ext + '/translations/{cc}'.format(
-                cc=country_code
-            )
+            uri = build_uri(self.ext + '/translations/{cc}', cc=country_code)
+            data = yield uri
             self._translations = [Translation(**translation)
                                   for translation in data]
         yield self._translations

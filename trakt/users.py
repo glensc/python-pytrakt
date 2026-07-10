@@ -24,11 +24,13 @@ class Request(NamedTuple):
 
     @post
     def approve(self):
-        yield 'users/requests/{id}'.format(id=self.id)
+        uri = build_uri('users/requests/{id}', id=self.id)
+        yield uri
 
     @delete
     def deny(self):
-        yield 'users/requests/{id}'.format(id=self.id)
+        uri = build_uri('users/requests/{id}', id=self.id)
+        yield uri
 
 
 @post
@@ -37,7 +39,8 @@ def follow(user_name):
     follow request will be in a pending state. If they have a public profile,
     they will be followed immediately.
     """
-    yield 'users/{username}/follow'.format(username=slugify(user_name))
+    uri = build_uri('users/{username}/follow', username=slugify(user_name))
+    yield uri
 
 
 @get
@@ -64,7 +67,8 @@ def get_user_settings():
 def unfollow(user_name):
     """Unfollow a user you're currently following with a username of *user_name*
     """
-    yield 'users/{username}/follow'.format(username=slugify(user_name))
+    uri = build_uri('users/{username}/follow', username=slugify(user_name))
+    yield uri
 
 
 @dataclass(frozen=True)
@@ -226,7 +230,8 @@ class UserList(DataClassMixin(ListDescription), IdsMixin):
                 'allow_comments': allow_comments}
         if description is not None:
             args['description'] = description
-        data = yield 'users/{user}/lists'.format(user=slugify(creator)), args
+        uri = build_uri('users/{user}/lists', user=slugify(creator))
+        data = yield uri, args
         yield cls(creator=creator, user=creator, **data)
 
     @classmethod
@@ -236,8 +241,9 @@ class UserList(DataClassMixin(ListDescription), IdsMixin):
 
         :param title: Name of the list.
         """
-        data = yield 'users/{user}/lists/{id}'.format(user=slugify(creator),
-                                                      id=slugify(title))
+        uri = build_uri('users/{user}/lists/{id}', user=slugify(creator),
+                        id=slugify(title))
+        data = yield uri
         ulist = cls(creator=creator, **data)
         ulist.get_items()
 
@@ -250,8 +256,9 @@ class UserList(DataClassMixin(ListDescription), IdsMixin):
 
         """
 
-        data = yield 'users/{user}/lists/{id}/items'.format(
-            user=slugify(self.creator), id=self.slug)
+        uri = build_uri('users/{user}/lists/{id}/items',
+                        user=slugify(self.creator), id=self.slug)
+        data = yield uri
 
         for item in data:
             # match list item type
@@ -290,23 +297,25 @@ class UserList(DataClassMixin(ListDescription), IdsMixin):
         people = [p.ids for p in items if isinstance(p, Person)]
         self._items = items
         args = {'movies': movies, 'shows': shows, 'people': people}
-        uri = 'users/{user}/lists/{id}/items'.format(
-            user=slugify(self.creator), id=self.trakt)
+        uri = build_uri('users/{user}/lists/{id}/items',
+                        user=slugify(self.creator), id=self.trakt)
         yield uri, args
 
     @delete
     def delete_list(self):
         """Delete this :class:`UserList`"""
-        yield 'users/{user}/lists/{id}'.format(user=slugify(self.creator),
-                                               id=self.trakt)
+        uri = build_uri('users/{user}/lists/{id}', user=slugify(self.creator),
+                        id=self.trakt)
+        yield uri
 
     @post
     def like(self):
         """Like this :class:`UserList`. Likes help determine popular lists.
         Only one like is allowed per list per user.
         """
-        uri = 'users/{user}/lists/{id}/like'
-        yield uri.format(user=slugify(self.creator), id=self.trakt), None
+        uri = build_uri('users/{user}/lists/{id}/like',
+                        user=slugify(self.creator), id=self.trakt)
+        yield uri, None
 
     @post
     def remove_items(self, *items):
@@ -317,15 +326,16 @@ class UserList(DataClassMixin(ListDescription), IdsMixin):
         people = [p.ids for p in items if isinstance(p, Person)]
         self._items = items
         args = {'movies': movies, 'shows': shows, 'people': people}
-        uri = 'users/{user}/lists/{id}/items/remove'.format(
-            user=slugify(self.creator), id=self.trakt)
+        uri = build_uri('users/{user}/lists/{id}/items/remove',
+                        user=slugify(self.creator), id=self.trakt)
         yield uri, args
 
     @delete
     def unlike(self):
         """Remove a like on this :class:`UserList`."""
-        uri = 'users/{username}/lists/{id}/like'
-        yield uri.format(username=slugify(self.creator), id=self.trakt)
+        uri = build_uri('users/{username}/lists/{id}/like',
+                        username=slugify(self.creator), id=self.trakt)
+        yield uri
 
 
 class User:
@@ -353,7 +363,8 @@ class User:
     @get
     def _get(self):
         """Get this :class:`User` from the trakt.tv API"""
-        data = yield 'users/{username}'.format(username=slugify(self.username))
+        uri = build_uri('users/{username}', username=slugify(self.username))
+        data = yield uri
         self._build(data)
 
     def _build(self, data):
@@ -370,8 +381,8 @@ class User:
         display data either.
         """
         if self._followers is None:
-            data = yield 'users/{user}/followers'.format(
-                user=slugify(self.username))
+            uri = build_uri('users/{user}/followers', user=slugify(self.username))
+            data = yield uri
             self._followers = []
             for user in data:
                 user_data = user.pop('user')
@@ -388,8 +399,8 @@ class User:
         that are protected won't display data either.
         """
         if self._following is None:
-            data = yield 'users/{user}/following'.format(
-                user=slugify(self.username))
+            uri = build_uri('users/{user}/following', user=slugify(self.username))
+            data = yield uri
             self._following = []
             for user in data:
                 user_data = user.pop('user')
@@ -408,8 +419,8 @@ class User:
         """
         if self._friends is None:
             self._friends = []
-            data = yield 'users/{user}/friends'.format(
-                user=slugify(self.username))
+            uri = build_uri('users/{user}/friends', user=slugify(self.username))
+            data = yield uri
             for user in data:
                 user_data = user.pop('user')
                 date = user.pop('friends_at')
@@ -424,8 +435,8 @@ class User:
         lists, you will need to authenticate as yourself.
         """
         if self._lists is None:
-            data = yield 'users/{username}/lists'.format(
-                username=slugify(self.username))
+            uri = build_uri('users/{username}/lists', username=slugify(self.username))
+            data = yield uri
             for ul in data:
                 if "user" in ul:
                     # user will be replaced with the self User object
@@ -556,9 +567,8 @@ class User:
         collection.
         """
         if self._watched_shows is None:
-            data = yield 'users/{user}/watched/shows'.format(
-                user=slugify(self.username)
-            )
+            uri = build_uri('users/{user}/watched/shows', user=slugify(self.username))
+            data = yield uri
             self._watched_shows = []
             for show in data:
                 show_data = show.pop('show')
@@ -574,8 +584,8 @@ class User:
         will be returned. Protected users won't return any data unless you are
         friends.
         """
-        data = yield 'users/{user}/watching'.format(
-            user=slugify(self.username))
+        uri = build_uri('users/{user}/watching', user=slugify(self.username))
+        data = yield uri
 
         # if a user isn't watching anything, trakt returns a 204
         if data is None or data == '':
@@ -616,10 +626,13 @@ class User:
             'movies', 'shows', 'seasons', 'episodes'
         :param rating: Optional rating between 1 and 10
         """
-        uri = 'users/{user}/ratings/{type}'.format(user=slugify(self.username),
-                                                   type=media_type)
         if rating is not None:
-            uri += '/{rating}'.format(rating=rating)
+            uri = build_uri('users/{user}/ratings/{type}/{rating}',
+                            user=slugify(self.username), type=media_type,
+                            rating=rating)
+        else:
+            uri = build_uri('users/{user}/ratings/{type}',
+                            user=slugify(self.username), type=media_type)
         data = yield uri
         # TODO (moogar0880) - return as objects
         yield data
@@ -629,7 +642,8 @@ class User:
         """Returns stats about the movies, shows, and episodes a user has
         watched and collected
         """
-        data = yield 'users/{user}/stats'.format(user=slugify(self.username))
+        uri = build_uri('users/{user}/stats', user=slugify(self.username))
+        data = yield uri
         yield data
 
     @get
