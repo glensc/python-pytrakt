@@ -250,8 +250,7 @@ def get_search_results(query, search_type=None, slugify_query=False):
     if slugify_query:
         query = slugify(query)
 
-    uri = 'search/{type}?query={query}'.format(
-        query=query, type=','.join(search_type))
+    uri = build_uri('search/{type}?query={query}', query=query, type=','.join(search_type))
 
     data = yield uri
 
@@ -324,11 +323,10 @@ def search_by_id(query, id_type='imdb', media_type=None, slugify_query=False):
 
     # If media_type is still none, don't add it as a parameter to the search
     if media_type is None:
-        uri = 'search/{source}/{query}'.format(
-            query=query, source=source)
+        uri = build_uri('search/{source}/{query}', query=query, source=source)
     else:
-        uri = 'search/{source}/{query}?type={media_type}'.format(
-            query=query, source=source, media_type=media_type)
+        uri = build_uri('search/{source}/{query}?type={media_type}',
+                        query=query, source=source, media_type=media_type)
     data = yield uri
 
     results = []
@@ -423,12 +421,15 @@ def get_watchlist(list_type=None, sort=None):
     if sort and sort not in valid_sort:
         raise ValueError('sort must be one of {}'.format(valid_sort))
 
-    uri = 'sync/watchlist'
     if list_type:
-        uri += '/{}'.format(list_type)
-
-    if list_type and sort:
-        uri += '/{}'.format(sort)
+        if sort:
+            uri = build_uri('sync/watchlist/{list_type}/{sort}',
+                            list_type=list_type, sort=sort)
+        else:
+            uri = build_uri('sync/watchlist/{list_type}',
+                            list_type=list_type)
+    else:
+        uri = build_uri('sync/watchlist')
 
     data = yield uri
     results = []
