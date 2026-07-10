@@ -31,7 +31,8 @@ def dismiss_recommendation(title):
     """Dismiss the movie matching the specified criteria from showing up in
     recommendations.
     """
-    yield 'recommendations/movies/{title}'.format(title=slugify(str(title)))
+    uri = build_uri('recommendations/movies/{title}', title=slugify(str(title)))
+    yield uri
 
 
 @get
@@ -73,7 +74,8 @@ def updated_movies(timestamp=None):
     method.
     """
     ts = timestamp or now()
-    data = yield 'movies/updates/{start_date}'.format(start_date=ts)
+    uri = build_uri('movies/updates/{start_date}', start_date=ts)
+    data = yield uri
     to_ret = []
     for movie in data:
         mov = movie.pop('movie')
@@ -286,7 +288,8 @@ class Movie(IdsMixin):
         :return: a :const:`list` of :class:`Release` objects
         """
         if self._releases is None:
-            data = yield self.ext + '/releases/{cc}'.format(cc=country_code)
+            uri = build_uri(self.ext + '/releases/{cc}', cc=country_code)
+            data = yield uri
             self._releases = [Release(**release) for release in data]
         yield self._releases
 
@@ -299,9 +302,8 @@ class Movie(IdsMixin):
         :return: a :const:`list` of :class:`Translation` objects
         """
         if self._translations is None:
-            data = yield self.ext + '/translations/{cc}'.format(
-                cc=country_code
-            )
+            uri = build_uri(self.ext + '/translations/{cc}', cc=country_code)
+            data = yield uri
             self._translations = [Translation(**translation)
                                   for translation in data]
         yield self._translations
