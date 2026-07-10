@@ -31,7 +31,7 @@ class Translation(NamedTuple):
 
 
 @delete
-def dismiss_recommendation(title=None):
+def dismiss_recommendation(title):
     """Dismiss the show matching the specified criteria from showing up in
     recommendations.
     """
