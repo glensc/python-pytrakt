@@ -517,7 +517,7 @@ class User:
         yield self._show_collection
 
     @staticmethod
-    def _build_movies(data):
+    def _build_movies(data, merge=True):
         """Parse raw API response data into a list of :class:`Movie` objects.
 
         :param data: List of raw movie dicts from the Trakt API
@@ -533,7 +533,9 @@ class User:
                 logger.warning("Ignoring invalid Movie with no title: %s", original)
                 continue
 
-            movie_data.update(movie)
+            if merge:
+                movie_data.update(movie)
+
             movies.append(Movie(**movie_data))
 
         return movies
