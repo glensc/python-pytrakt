@@ -474,21 +474,20 @@ class User:
         return self._movie_watchlist
 
     @property
-    @get
     def movie_collection(self):
         """All :class:`Movie`'s in this :class:`User`'s library collection.
         Collection items might include blu-rays, dvds, and digital downloads.
         Protected users won't return any data unless you are friends.
         """
         if self._movie_collection is None:
-            data = yield build_uri('users/{username}/collection/movies',
+            data = paginate('users/{username}/collection/movies',
                                    username=slugify(self.username),
                                    extended='metadata')
             self._movie_collection = []
             for movie in data:
                 mov = movie.pop('movie')
                 self._movie_collection.append(Movie(**mov))
-        yield self._movie_collection
+        return self._movie_collection
 
     @property
     @get
