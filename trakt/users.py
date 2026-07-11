@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Interfaces to all of the User objects offered by the Trakt.tv API"""
 
+import logging
 from dataclasses import dataclass, fields
 from typing import Any, NamedTuple, Optional, Union
 
@@ -16,6 +17,7 @@ __author__ = 'Jon Nappi'
 __all__ = ['User', 'UserList', 'PublicList', 'Request', 'follow', 'get_all_requests',
            'get_user_settings', 'unfollow']
 
+logger = logging.getLogger(__name__)
 
 class Request(NamedTuple):
     id: int
