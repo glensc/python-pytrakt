@@ -483,10 +483,8 @@ class User:
             data = paginate('users/{username}/collection/movies',
                                    username=slugify(self.username),
                                    extended='metadata')
-            self._movie_collection = []
-            for movie in data:
-                mov = movie.pop('movie')
-                self._movie_collection.append(Movie(**mov))
+
+            self._movie_collection = self._build_movies(data, merge=False)
         return self._movie_collection
 
     @property
