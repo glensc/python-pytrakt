@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Interfaces to all of the User objects offered by the Trakt.tv API"""
 
+import logging
 from dataclasses import dataclass, fields
 from typing import Any, NamedTuple, Optional, Union
 
@@ -16,6 +17,7 @@ __author__ = 'Jon Nappi'
 __all__ = ['User', 'UserList', 'PublicList', 'Request', 'follow', 'get_all_requests',
            'get_user_settings', 'unfollow']
 
+logger = logging.getLogger(__name__)
 
 class Request(NamedTuple):
     id: int
@@ -522,11 +524,19 @@ class User:
         :param data: List of raw movie dicts from the Trakt API
         :return: List of :class:`Movie` instances
         """
+
         movies = []
         for movie in data:
             movie_data = movie.pop('movie')
+            # Title is required for Movie model
+            if movie_data.get('title') is None:
+                original = dict(**movie, **{'movie': movie_data})
+                logger.warning("Ignoring invalid Movie with no title: %s", original)
+                continue
+
             movie_data.update(movie)
             movies.append(Movie(**movie_data))
+
         return movies
 
     @get
