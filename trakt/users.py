@@ -474,21 +474,18 @@ class User:
         return self._movie_watchlist
 
     @property
-    @get
     def movie_collection(self):
         """All :class:`Movie`'s in this :class:`User`'s library collection.
         Collection items might include blu-rays, dvds, and digital downloads.
         Protected users won't return any data unless you are friends.
         """
         if self._movie_collection is None:
-            data = yield build_uri('users/{username}/collection/movies',
+            data = paginate('users/{username}/collection/movies',
                                    username=slugify(self.username),
                                    extended='metadata')
-            self._movie_collection = []
-            for movie in data:
-                mov = movie.pop('movie')
-                self._movie_collection.append(Movie(**mov))
-        yield self._movie_collection
+
+            self._movie_collection = self._build_movies(data, merge=False)
+        return self._movie_collection
 
     @property
     @get
@@ -518,7 +515,7 @@ class User:
         yield self._show_collection
 
     @staticmethod
-    def _build_movies(data):
+    def _build_movies(data, merge=True):
         """Parse raw API response data into a list of :class:`Movie` objects.
 
         :param data: List of raw movie dicts from the Trakt API
@@ -534,7 +531,9 @@ class User:
                 logger.warning("Ignoring invalid Movie with no title: %s", original)
                 continue
 
-            movie_data.update(movie)
+            if merge:
+                movie_data.update(movie)
+
             movies.append(Movie(**movie_data))
 
         return movies
