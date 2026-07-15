@@ -159,3 +159,12 @@ def test_next_episode():
 def test_last_episode():
     got = TVShow('Game of Thrones')
     assert isinstance(got.last_episode, TVEpisode)
+
+
+def test_show_ids_include_tvdb():
+    # tvdb is a primary Trakt id with an existing accessor; it must be present
+    # in .ids so downstream tvdb-guid matching (e.g. PlexTraktSync) resolves.
+    # Regression for tvdb being omitted from the ids accessor list.
+    got = TVShow('Game of Thrones')
+    assert got.tvdb == 121361
+    assert got.ids['ids']['tvdb'] == 121361
